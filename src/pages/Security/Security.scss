@@ -1,0 +1,480 @@
+.security {
+  &__header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: $font-size-xxxl;
+      font-weight: 700;
+      color: $text-primary;
+      margin: 0 0 $spacing-sm 0;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: $font-size-lg;
+      margin: 0;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xl;
+  }
+}
+
+.password-form {
+  max-width: 500px;
+
+  .form-group {
+    margin-bottom: $spacing-lg;
+
+    label {
+      display: block;
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+      font-size: $font-size-sm;
+    }
+  }
+
+  .password-input {
+    position: relative;
+
+    .form-input {
+      width: 100%;
+      padding: $spacing-sm $spacing-md;
+      padding-right: 2.5rem;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-md;
+      font-size: $font-size-base;
+      background-color: $background-color;
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+      }
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: $spacing-sm;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: $text-muted;
+      padding: $spacing-xs;
+      border-radius: $border-radius-sm;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: $text-primary;
+      }
+    }
+  }
+
+  .password-requirements {
+    margin-top: $spacing-lg;
+    padding: $spacing-lg;
+    background-color: $background-light;
+    border-radius: $border-radius-md;
+
+    h4 {
+      margin: 0 0 $spacing-md 0;
+      color: $text-primary;
+      font-size: $font-size-base;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-sm;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-sm;
+
+      &.requirement-met {
+        color: $success-color;
+
+        svg {
+          color: $success-color;
+        }
+      }
+
+      &.requirement-unmet {
+        color: $text-muted;
+
+        svg {
+          color: $text-muted;
+        }
+      }
+    }
+  }
+}
+
+.two-factor-section {
+  .two-factor-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-xl;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      gap: $spacing-lg;
+    }
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-md;
+    flex: 1;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+
+    &--enabled {
+      background-color: $success-color;
+    }
+
+    &--disabled {
+      background-color: $text-muted;
+    }
+  }
+
+  .status-text {
+    strong {
+      display: block;
+      color: $text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+  }
+
+  .two-factor-setup {
+    border-top: 1px solid $border-light;
+    padding-top: $spacing-xl;
+    margin-top: $spacing-xl;
+  }
+
+  .setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xl;
+  }
+
+  .setup-step {
+    h4 {
+      margin: 0 0 $spacing-sm 0;
+      color: $text-primary;
+      font-size: $font-size-base;
+    }
+
+    p {
+      margin: 0 0 $spacing-md 0;
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+
+    .qr-code {
+      display: flex;
+      justify-content: center;
+      margin: $spacing-lg 0;
+
+      img {
+        border: 1px solid $border-color;
+        border-radius: $border-radius-md;
+      }
+    }
+
+    code {
+      background-color: $background-light;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-family: monospace;
+      font-size: $font-size-sm;
+    }
+
+    .otp-input {
+      display: flex;
+      gap: $spacing-md;
+      align-items: center;
+
+      .form-input {
+        width: 120px;
+        text-align: center;
+        font-family: monospace;
+        font-size: $font-size-lg;
+        letter-spacing: 0.2em;
+      }
+    }
+
+    .backup-codes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: $spacing-sm;
+      margin: $spacing-md 0;
+      padding: $spacing-lg;
+      background-color: $background-light;
+      border-radius: $border-radius-md;
+
+      code {
+        text-align: center;
+        padding: $spacing-sm;
+        background-color: $background-color;
+        border: 1px solid $border-color;
+      }
+
+      @media (max-width: $breakpoint-sm) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+
+  .session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-md;
+    }
+  }
+
+  .session-info {
+    flex: 1;
+  }
+
+  .session-device {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    margin-bottom: $spacing-xs;
+
+    strong {
+      color: $text-primary;
+    }
+
+    .current-session {
+      background-color: rgba($success-color, 0.1);
+      color: $success-color;
+      padding: 2px $spacing-xs;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-xs;
+      font-weight: 500;
+    }
+  }
+
+  .session-details {
+    color: $text-secondary;
+    font-size: $font-size-sm;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+}
+
+.sessions-actions {
+  border-top: 1px solid $border-light;
+  padding-top: $spacing-lg;
+}
+
+.login-history {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  .login-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md 0;
+    border-bottom: 1px solid $border-light;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .login-status {
+    .status-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &--success {
+        background-color: rgba($success-color, 0.1);
+        color: $success-color;
+      }
+
+      &--failed {
+        background-color: rgba($danger-color, 0.1);
+        color: $danger-color;
+      }
+    }
+  }
+
+  .login-info {
+    flex: 1;
+
+    .login-timestamp {
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .login-details {
+      color: $text-secondary;
+      font-size: $font-size-sm;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+    }
+  }
+
+  .login-status-text {
+    .status-text {
+      font-size: $font-size-sm;
+      font-weight: 500;
+
+      &--success {
+        color: $success-color;
+      }
+
+      &--failed {
+        color: $danger-color;
+      }
+    }
+  }
+}
+
+.security-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  .recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-md;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+    }
+  }
+
+  .recommendation-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .recommendation-content {
+    flex: 1;
+
+    h4 {
+      margin: 0 0 $spacing-xs 0;
+      color: $text-primary;
+      font-size: $font-size-base;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+  }
+
+  .recommendation-action {
+    flex-shrink: 0;
+
+    .recommendation-completed {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      color: $success-color;
+      font-size: $font-size-sm;
+      font-weight: 500;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .two-factor-section {
+    .setup-step {
+      .otp-input {
+        flex-direction: column;
+        align-items: stretch;
+
+        .form-input {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .sessions-list {
+    .session-item {
+      .session-details {
+        flex-wrap: wrap;
+      }
+    }
+  }
+
+  .login-history {
+    .login-item {
+      flex-wrap: wrap;
+      gap: $spacing-sm;
+    }
+
+    .login-info {
+      min-width: 200px;
+    }
+  }
+}

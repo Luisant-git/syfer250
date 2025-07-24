@@ -1,0 +1,581 @@
+.plans-billing {
+  &__header {
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: $font-size-xxxl;
+      font-weight: 700;
+      color: $text-primary;
+      margin: 0 0 $spacing-sm 0;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: $font-size-lg;
+      margin: 0;
+    }
+  }
+}
+
+.current-plan {
+  margin-bottom: $spacing-xl;
+
+  &__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $spacing-xl;
+
+    @media (max-width: $breakpoint-md) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__info {
+    flex: 1;
+  }
+
+  &__billing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: $spacing-md;
+
+    @media (max-width: $breakpoint-md) {
+      align-items: stretch;
+    }
+  }
+
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-sm;
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    padding: $spacing-sm $spacing-md;
+    border-radius: $border-radius-lg;
+    font-weight: 600;
+    margin-bottom: $spacing-md;
+  }
+
+  .plan-details {
+    .plan-price {
+      font-size: $font-size-xxl;
+      font-weight: 700;
+      color: $text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .plan-description {
+      color: $text-secondary;
+    }
+  }
+
+  .billing-info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+
+    .billing-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      color: $text-secondary;
+      font-size: $font-size-sm;
+
+      svg {
+        color: $text-muted;
+      }
+    }
+  }
+}
+
+.plans-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-lg;
+
+  @media (max-width: $breakpoint-sm) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  h2 {
+    margin: 0;
+  }
+
+  .billing-toggle {
+    display: flex;
+    background-color: $background-light;
+    border-radius: $border-radius-lg;
+    padding: $spacing-xs;
+
+    button {
+      position: relative;
+      padding: $spacing-sm $spacing-lg;
+      border: none;
+      background: none;
+      border-radius: $border-radius-md;
+      cursor: pointer;
+      font-weight: 500;
+      color: $text-secondary;
+      transition: all 0.2s ease;
+
+      &.active {
+        background-color: $background-color;
+        color: $primary-color;
+        box-shadow: $shadow-sm;
+      }
+
+      .discount-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: $success-color;
+        color: white;
+        font-size: $font-size-xs;
+        padding: 2px 6px;
+        border-radius: $border-radius-sm;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: $spacing-xl;
+  margin-top: $spacing-xl;
+}
+
+.plan-card {
+  position: relative;
+  border: 2px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: $primary-color;
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+
+  &--popular {
+    border-color: $primary-color;
+    box-shadow: $shadow-md;
+
+    .plan-card__badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: $primary-color;
+      color: white;
+      padding: $spacing-xs $spacing-md;
+      border-radius: $border-radius-lg;
+      font-size: $font-size-xs;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  &--current {
+    border-color: $success-color;
+    background-color: rgba($success-color, 0.02);
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      margin: $spacing-md 0 $spacing-sm 0;
+      color: $text-primary;
+      font-size: $font-size-xl;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  &__price {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    .price-amount {
+      font-size: $font-size-xxxl;
+      font-weight: 700;
+      color: $text-primary;
+    }
+
+    .price-period {
+      color: $text-secondary;
+      font-size: $font-size-lg;
+    }
+
+    .price-savings {
+      margin-top: $spacing-xs;
+      color: $success-color;
+      font-size: $font-size-sm;
+      font-weight: 500;
+    }
+  }
+
+  &__features {
+    margin-bottom: $spacing-xl;
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-md;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-sm;
+      color: $text-secondary;
+
+      svg {
+        color: $success-color;
+        flex-shrink: 0;
+      }
+    }
+
+    .plan-limitations {
+      margin-top: $spacing-lg;
+      padding-top: $spacing-lg;
+      border-top: 1px solid $border-light;
+
+      h4 {
+        margin: 0 0 $spacing-md 0;
+        color: $text-primary;
+        font-size: $font-size-sm;
+        font-weight: 600;
+      }
+
+      ul {
+        gap: $spacing-sm;
+      }
+
+      li {
+        color: $text-muted;
+
+        svg {
+          color: $warning-color;
+        }
+      }
+    }
+  }
+
+  &__action {
+    text-align: center;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-lg;
+
+  h2 {
+    margin: 0;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  .payment-method {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-md;
+    }
+
+    &__info {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      flex: 1;
+    }
+
+    &__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: $border-radius-md;
+      background-color: $background-light;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-muted;
+    }
+
+    &__details {
+      flex: 1;
+    }
+
+    &__brand {
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__expiry {
+      color: $text-secondary;
+      font-size: $font-size-sm;
+    }
+
+    &__default {
+      background-color: rgba($success-color, 0.1);
+      color: $success-color;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-xs;
+      font-weight: 600;
+    }
+
+    &__actions {
+      display: flex;
+      gap: $spacing-sm;
+
+      @media (max-width: $breakpoint-sm) {
+        justify-content: center;
+      }
+    }
+  }
+}
+
+.billing-history {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  .billing-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: $spacing-lg;
+    align-items: center;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+      text-align: center;
+    }
+
+    &__info {
+      @media (max-width: $breakpoint-md) {
+        order: 1;
+      }
+    }
+
+    &__date {
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__description {
+      color: $text-secondary;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__invoice {
+      color: $text-muted;
+      font-size: $font-size-sm;
+    }
+
+    &__amount {
+      font-weight: 600;
+      color: $text-primary;
+      font-size: $font-size-lg;
+
+      @media (max-width: $breakpoint-md) {
+        order: 2;
+      }
+    }
+
+    &__status {
+      @media (max-width: $breakpoint-md) {
+        order: 3;
+      }
+    }
+
+    &__actions {
+      @media (max-width: $breakpoint-md) {
+        order: 4;
+      }
+    }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &--success {
+    background-color: rgba($success-color, 0.1);
+    color: $success-color;
+  }
+
+  &--warning {
+    background-color: rgba($warning-color, 0.1);
+    color: $warning-color;
+  }
+
+  &--danger {
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+  }
+
+  &--secondary {
+    background-color: rgba($text-secondary, 0.1);
+    color: $text-secondary;
+  }
+}
+
+.usage-stats {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+
+  .usage-stat {
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-sm;
+
+      span:first-child {
+        font-weight: 500;
+        color: $text-primary;
+      }
+
+      span:last-child {
+        font-weight: 600;
+        color: $text-secondary;
+        font-size: $font-size-sm;
+      }
+    }
+
+    &__bar {
+      width: 100%;
+      height: 8px;
+      background-color: $background-light;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    &__fill {
+      height: 100%;
+      background-color: $primary-color;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .current-plan {
+    &__content {
+      text-align: center;
+    }
+
+    &__billing {
+      align-items: center;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .plans-billing {
+    &__header {
+      text-align: center;
+    }
+  }
+
+  .plan-card {
+    padding: $spacing-lg;
+
+    &__header {
+      margin-bottom: $spacing-lg;
+    }
+
+    &__price {
+      margin-bottom: $spacing-lg;
+    }
+
+    &__features {
+      margin-bottom: $spacing-lg;
+    }
+  }
+
+  .billing-history {
+    .billing-item {
+      padding: $spacing-md;
+    }
+  }
+
+  .payment-methods {
+    .payment-method {
+      padding: $spacing-md;
+    }
+  }
+}

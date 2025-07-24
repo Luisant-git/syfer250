@@ -1,0 +1,877 @@
+// Import Settings Styles
+.import-settings {
+  .step-header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    h2 {
+      font-size: $font-size-xxl;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0 0 $spacing-sm 0;
+    }
+
+    p {
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+
+  .import-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+    margin-bottom: $spacing-xl;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .file-upload {
+    &__area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: $spacing-xxl;
+      border: 2px dashed $border-color;
+      border-radius: $border-radius-lg;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+
+      &:hover {
+        border-color: $primary-color;
+        background-color: rgba($primary-color, 0.02);
+      }
+
+      svg {
+        color: $text-muted;
+        margin-bottom: $spacing-md;
+      }
+    }
+
+    &__text {
+      color: $text-secondary;
+      line-height: 1.5;
+
+      strong {
+        color: $primary-color;
+      }
+
+      small {
+        color: $text-muted;
+      }
+    }
+
+    &__success {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      padding: $spacing-md;
+      background-color: rgba($success-color, 0.1);
+      border: 1px solid rgba($success-color, 0.2);
+      border-radius: $border-radius-md;
+      margin-top: $spacing-md;
+
+      svg {
+        color: $success-color;
+      }
+
+      span {
+        flex: 1;
+        font-weight: 500;
+        color: $text-primary;
+      }
+    }
+  }
+
+  .form-group {
+    margin-bottom: $spacing-lg;
+
+    label {
+      display: block;
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+
+      input[type="checkbox"] {
+        margin-right: $spacing-sm;
+      }
+    }
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    font-size: $font-size-base;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    }
+  }
+
+  .preview-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: $spacing-sm $spacing-md;
+      text-align: left;
+      border-bottom: 1px solid $border-light;
+    }
+
+    th {
+      background-color: $background-light;
+      font-weight: 600;
+      color: $text-primary;
+    }
+
+    td {
+      color: $text-secondary;
+    }
+  }
+
+  .field-mapping {
+    display: grid;
+    gap: $spacing-md;
+  }
+
+  .mapping-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: $spacing-md;
+    align-items: center;
+
+    label {
+      font-weight: 500;
+      color: $text-primary;
+      margin: 0;
+    }
+  }
+}
+
+// Email Sequences Styles
+.email-sequences {
+  .sequences-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      margin: 0;
+      color: $text-primary;
+      font-size: $font-size-xl;
+    }
+  }
+
+  .sequence-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+  }
+
+  .sequence-item {
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: $spacing-md;
+    }
+
+    &__info {
+      flex: 1;
+    }
+
+    &__number {
+      font-size: $font-size-sm;
+      color: $text-muted;
+      font-weight: 500;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__subject {
+      margin: 0 0 $spacing-xs 0;
+      color: $text-primary;
+      font-size: $font-size-lg;
+      font-weight: 600;
+    }
+
+    &__delay {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      background-color: $background-light;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      display: inline-block;
+    }
+
+    &__actions {
+      display: flex;
+      gap: $spacing-sm;
+    }
+
+    &__preview {
+      color: $text-secondary;
+      font-size: $font-size-sm;
+      line-height: 1.5;
+    }
+  }
+
+  .email-editor {
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-xl;
+      padding-bottom: $spacing-lg;
+      border-bottom: 1px solid $border-light;
+
+      h3 {
+        margin: 0;
+        color: $text-primary;
+      }
+    }
+
+    &__actions {
+      display: flex;
+      gap: $spacing-md;
+    }
+
+    &__form {
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: $spacing-lg;
+
+        @media (max-width: $breakpoint-sm) {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .form-textarea {
+        width: 100%;
+        padding: $spacing-md;
+        border: 1px solid $border-color;
+        border-radius: $border-radius-md;
+        font-size: $font-size-base;
+        font-family: $font-family;
+        resize: vertical;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+      }
+    }
+  }
+
+  .email-variables {
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $border-light;
+
+    h4 {
+      margin: 0 0 $spacing-md 0;
+      color: $text-primary;
+      font-size: $font-size-base;
+    }
+
+    .variable-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-sm;
+    }
+
+    .variable-tag {
+      background-color: $background-light;
+      color: $primary-color;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-sm;
+      font-family: monospace;
+      border: 1px solid $border-color;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $primary-color;
+        color: white;
+      }
+    }
+  }
+}
+
+// Select Sender Styles
+.select-sender {
+  .sender-accounts {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
+  }
+
+  .sender-account {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+
+    &:hover {
+      border-color: rgba($primary-color, 0.3);
+    }
+
+    &--selected {
+      border-color: $primary-color;
+      background-color: rgba($primary-color, 0.02);
+    }
+
+    &__content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: $spacing-md;
+    }
+
+    &__header {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      margin-bottom: $spacing-md;
+
+      svg {
+        color: $primary-color;
+      }
+
+      h4 {
+        margin: 0;
+        color: $text-primary;
+        font-size: $font-size-lg;
+      }
+    }
+
+    &__provider {
+      color: $text-muted;
+      font-size: $font-size-sm;
+    }
+
+    &__stats {
+      display: flex;
+      gap: $spacing-lg;
+
+      @media (max-width: $breakpoint-sm) {
+        flex-direction: column;
+        gap: $spacing-sm;
+      }
+    }
+
+    &__progress {
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background-color: $background-light;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: $spacing-xs;
+
+        &__fill {
+          height: 100%;
+          background-color: $primary-color;
+          transition: width 0.3s ease;
+        }
+      }
+
+      .progress-text {
+        font-size: $font-size-xs;
+        color: $text-muted;
+      }
+    }
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    &__label {
+      font-size: $font-size-xs;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    &__value {
+      font-weight: 600;
+      color: $text-primary;
+    }
+  }
+
+  .selection-indicator {
+    width: 32px;
+    height: 32px;
+    background-color: $primary-color;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .add-account-card {
+    border: 2px dashed $border-color;
+    background-color: $background-light;
+
+    svg {
+      color: $text-muted;
+    }
+
+    h4 {
+      margin: 0 0 $spacing-sm 0;
+      color: $text-primary;
+    }
+  }
+
+  .sender-settings {
+    margin-top: $spacing-xl;
+  }
+}
+
+// Schedule Campaign Styles
+.schedule-campaign {
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+    margin-bottom: $spacing-xl;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .schedule-options {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+
+  .schedule-option {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-md;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $primary-color;
+      background-color: rgba($primary-color, 0.02);
+    }
+
+    input[type="radio"] {
+      margin-top: 2px;
+    }
+
+    &__content {
+      display: flex;
+      align-items: flex-start;
+      gap: $spacing-md;
+      flex: 1;
+
+      svg {
+        color: $primary-color;
+        margin-top: 2px;
+      }
+
+      strong {
+        display: block;
+        color: $text-primary;
+        margin-bottom: $spacing-xs;
+      }
+
+      p {
+        margin: 0;
+        color: $text-secondary;
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  .schedule-details {
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $border-light;
+  }
+
+  .day-selector {
+    display: flex;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+  }
+
+  .day-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-sm;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 60px;
+
+    &:hover {
+      border-color: $primary-color;
+    }
+
+    input[type="checkbox"]:checked + span {
+      color: $primary-color;
+      font-weight: 600;
+    }
+
+    span {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+    }
+  }
+
+  .form-help {
+    display: block;
+    margin-top: $spacing-xs;
+    color: $text-muted;
+    font-size: $font-size-sm;
+  }
+
+  .schedule-summary {
+    .summary-grid {
+      display: grid;
+      gap: $spacing-md;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-sm 0;
+      border-bottom: 1px solid $border-light;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      strong {
+        color: $text-primary;
+      }
+
+      span {
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+// Campaign Settings Styles
+.campaign-settings {
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xl;
+    margin-bottom: $spacing-xl;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      cursor: pointer;
+      margin: 0;
+
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xl;
+    text-align: center;
+  }
+
+  .summary-stat {
+    &__value {
+      font-size: $font-size-xxxl;
+      font-weight: 700;
+      color: $primary-color;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__label {
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .summary-details {
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-sm 0;
+      border-bottom: 1px solid $border-light;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .summary-label {
+      font-weight: 500;
+      color: $text-primary;
+    }
+
+    .summary-value {
+      color: $text-secondary;
+    }
+  }
+
+  .final-actions {
+    &__content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      @media (max-width: $breakpoint-md) {
+        flex-direction: column;
+        gap: $spacing-lg;
+        text-align: center;
+      }
+    }
+
+    &__info {
+      h3 {
+        margin: 0 0 $spacing-sm 0;
+        color: $text-primary;
+        font-size: $font-size-xl;
+      }
+
+      p {
+        margin: 0;
+        color: $text-secondary;
+      }
+    }
+
+    &__buttons {
+      display: flex;
+      gap: $spacing-md;
+
+      @media (max-width: $breakpoint-sm) {
+        flex-direction: column;
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Preview Modal Styles
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  &__content {
+    position: relative;
+    background-color: $background-color;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-lg;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    &--large {
+      max-width: 800px;
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg $spacing-xl;
+    border-bottom: 1px solid $border-light;
+
+    h3 {
+      margin: 0;
+      color: $text-primary;
+    }
+
+    button {
+      font-size: $font-size-xl;
+      line-height: 1;
+    }
+  }
+
+  &__body {
+    padding: $spacing-xl;
+    overflow-y: auto;
+    flex: 1;
+  }
+}
+
+.email-preview {
+  &__subject {
+    margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid $border-light;
+
+    strong {
+      color: $text-primary;
+    }
+  }
+
+  &__content {
+    line-height: 1.6;
+    color: $text-secondary;
+  }
+}
+
+.campaign-preview {
+  .preview-section {
+    margin-bottom: $spacing-xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      margin: 0 0 $spacing-lg 0;
+      color: $text-primary;
+      font-size: $font-size-lg;
+      border-bottom: 1px solid $border-light;
+      padding-bottom: $spacing-sm;
+    }
+  }
+
+  .preview-grid {
+    display: grid;
+    gap: $spacing-md;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-sm 0;
+
+      strong {
+        color: $text-primary;
+      }
+    }
+  }
+
+  .preview-email {
+    margin-bottom: $spacing-lg;
+    padding: $spacing-md;
+    border: 1px solid $border-light;
+    border-radius: $border-radius-md;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-sm;
+
+      strong {
+        color: $text-primary;
+      }
+    }
+
+    &__delay {
+      background-color: $background-light;
+      color: $text-secondary;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-xs;
+    }
+
+    &__content {
+      color: $text-secondary;
+      font-size: $font-size-sm;
+      line-height: 1.5;
+
+      em {
+        color: $text-muted;
+      }
+    }
+  }
+}
+
+// Utility classes
+.w-100 {
+  width: 100%;
+}
+
+.mt-3 {
+  margin-top: $spacing-lg;
+}
+
+.mt-4 {
+  margin-top: $spacing-xl;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: $text-muted;
+}
+
+.p-0 {
+  padding: 0;
+}

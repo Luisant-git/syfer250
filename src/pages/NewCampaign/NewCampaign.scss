@@ -1,0 +1,249 @@
+@import "./steps/steps";
+@import "./steps/EmailEditor";
+
+// Example premium variables (adjust as needed)
+$glass-bg: rgba(255, 255, 255, 0.7);
+$glass-blur: 16px;
+$shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+$shadow-md: 0 4px 16px 0 rgba(31, 38, 135, 0.10);
+$gradient-primary: linear-gradient(90deg, $primary-color 0%, $secondary-color 100%);
+$gradient-success: linear-gradient(90deg, $success-color 0%, lighten($success-color, 20%) 100%);
+$border-radius-lg: 24px;
+$border-radius-md: 16px;
+$transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+.new-campaign {
+  max-width: 10000px;
+  margin: -30px auto;
+  background: $glass-bg;
+  // box-shadow: $shadow-lg;
+  border-radius: 1px;
+  backdrop-filter: blur($glass-blur);
+  padding: 2.5rem 2rem 2rem 2rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    // Decorative gradient overlay
+    content: "";
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 300px; height: 300px;
+    background: $gradient-primary;
+    opacity: 0.12;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+    position: relative;
+    z-index: 1;
+
+    h1 {
+      font-size: $font-size-xxxl;
+      font-weight: 800;
+      color: $primary-color;
+      margin: 0 0 $spacing-sm 0;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 8px rgba($primary-color, 0.08);
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: $font-size-lg;
+      margin: 0;
+      opacity: 0.85;
+    }
+  }
+
+  &__progress {
+    margin-bottom: $spacing-xl;
+    z-index: 1;
+    position: relative;
+  }
+
+  &__content {
+    margin-bottom: $spacing-xl;
+    min-height: 500px;
+    background: rgba(255,255,255,0.85);
+    border-radius: $border-radius-md;
+    box-shadow: $shadow-md;
+    padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 1;
+    transition: box-shadow $transition-fast, background $transition-fast;
+  }
+
+  &__navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg 0;
+    z-index: 1;
+    position: relative;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      gap: $spacing-md;
+    }
+
+    button, .btn {
+      min-width: 120px;
+      padding: 0.75rem 1.5rem;
+      border-radius: $border-radius-md;
+      font-weight: 600;
+      font-size: 15px;
+      background: $gradient-primary;
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 8px rgba($primary-color, 0.10);
+      cursor: pointer;
+      transition: background $transition-fast, box-shadow $transition-fast, transform $transition-fast;
+
+      &:hover, &:focus {
+        background: darken($primary-color, 5%);
+        box-shadow: 0 4px 16px rgba($primary-color, 0.18);
+        transform: translateY(-2px) scale(1.03);
+      }
+
+      &:active {
+        background: $secondary-color;
+        transform: scale(0.98);
+      }
+    }
+  }
+
+  &__step-info {
+    color: $text-secondary;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    opacity: 0.7;
+    letter-spacing: 0.02em;
+    margin-top: 0.5rem;
+    z-index: 1;
+    position: relative;
+  }
+}
+
+.progress-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg;
+  overflow-x: auto;
+  background: rgba(255,255,255,0.6);
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-md;
+  position: relative;
+  z-index: 1;
+
+  @media (max-width: $breakpoint-md) {
+    justify-content: flex-start;
+    gap: $spacing-lg;
+  }
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+
+  &__circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 10px;
+    border: 2.5px solid $border-color;
+    background: rgba(255,255,255,0.95);
+    color: $text-muted;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.08);
+    transition: all $transition-fast;
+    position: relative;
+    z-index: 2;
+
+    // Add subtle glow on hover
+    &:hover {
+      box-shadow: 0 0 0 4px rgba($primary-color, 0.10);
+      cursor: pointer;
+    }
+  }
+
+  &__content {
+    margin-left: $spacing-md;
+    min-width: 120px;
+
+    @media (max-width: $breakpoint-sm) {
+      display: none;
+    }
+  }
+
+  &__title {
+    font-weight: 700;
+    color: $text-secondary;
+    font-size: $font-size-sm;
+    transition: color $transition-fast;
+    letter-spacing: 0.01em;
+  }
+
+  &__connector {
+    width: 60px;
+    height: 3px;
+    background: $border-color;
+    margin: 0 $spacing-lg;
+    border-radius: 2px;
+    transition: background $transition-fast;
+
+    @media (max-width: $breakpoint-md) {
+      width: 40px;
+      margin: 0 $spacing-md;
+    }
+  }
+
+  &--active {
+    .progress-step__circle {
+      border-color: $primary-color;
+      background: $gradient-primary;
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba($primary-color, 0.12);
+      animation: pulse 1.2s infinite alternate;
+    }
+
+    .progress-step__title {
+      color: $primary-color;
+      text-shadow: 0 2px 8px rgba($primary-color, 0.10);
+    }
+  }
+
+  &--completed {
+    .progress-step__circle {
+      border-color: $success-color;
+      background: $gradient-success;
+      color: #fff;
+      box-shadow: 0 0 0 6px rgba($success-color, 0.10);
+    }
+
+    .progress-step__title {
+      color: $success-color;
+    }
+
+    .progress-step__connector {
+      background: $gradient-success;
+    }
+  }
+}
+
+// Pulse animation for active step
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 6px rgba($primary-color, 0.12); }
+  100% { box-shadow: 0 0 0 12px rgba($primary-color, 0.18); }
+}

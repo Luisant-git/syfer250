@@ -1,0 +1,365 @@
+.settings {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: $font-size-xxxl;
+      font-weight: 700;
+      color: $text-primary;
+      margin: 0;
+    }
+
+    @media (max-width: $breakpoint-md) {
+      flex-direction: column;
+      gap: $spacing-lg;
+      align-items: stretch;
+    }
+  }
+
+  &__layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: $spacing-xl;
+
+    @media (max-width: $breakpoint-lg) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__nav {
+    @media (max-width: $breakpoint-lg) {
+      order: 2;
+    }
+  }
+
+  &__content {
+    @media (max-width: $breakpoint-lg) {
+      order: 1;
+    }
+  }
+}
+
+.settings-nav {
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    width: 100%;
+    padding: $spacing-md $spacing-lg;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: $text-secondary;
+    font-size: $font-size-sm;
+    font-weight: 500;
+    border-bottom: 1px solid $border-light;
+
+    &:hover {
+      background-color: $background-light;
+      color: $text-primary;
+    }
+
+    &--active {
+      background-color: rgba($primary-color, 0.1);
+      color: $primary-color;
+      border-right: 3px solid $primary-color;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    span {
+      white-space: nowrap;
+    }
+  }
+}
+
+.settings-grid {
+  display: grid;
+  gap: $spacing-xl;
+
+  @media (min-width: $breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-group {
+  margin-bottom: $spacing-lg;
+
+  label {
+    display: block;
+    font-weight: 500;
+    color: $text-primary;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-sm;
+  }
+
+  .form-input,
+  .form-select {
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    font-size: $font-size-base;
+    background-color: $background-color;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    }
+  }
+
+  .form-help {
+    display: block;
+    margin-top: $spacing-xs;
+    color: $text-muted;
+    font-size: $font-size-sm;
+  }
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin: 0 !important;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  input[type="checkbox"] {
+    margin: 0;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+.notification-settings,
+.security-settings {
+  .notification-group,
+  .security-group {
+    margin-bottom: $spacing-xl;
+
+    h3 {
+      margin: 0 0 $spacing-lg 0;
+      color: $text-primary;
+      font-size: $font-size-lg;
+      font-weight: 600;
+      padding-bottom: $spacing-sm;
+      border-bottom: 1px solid $border-light;
+    }
+  }
+}
+
+.security-actions {
+  display: flex;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+  margin-top: $spacing-xl;
+  padding-top: $spacing-xl;
+  border-top: 1px solid $border-light;
+}
+
+.api-keys {
+  margin-top: $spacing-xl;
+  padding-top: $spacing-xl;
+  border-top: 1px solid $border-light;
+
+  h3 {
+    margin: 0 0 $spacing-lg 0;
+    color: $text-primary;
+    font-size: $font-size-lg;
+    font-weight: 600;
+  }
+
+  .api-key-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-md;
+    margin-bottom: $spacing-md;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .api-key-info {
+      flex: 1;
+
+      strong {
+        display: block;
+        color: $text-primary;
+        margin-bottom: $spacing-xs;
+        font-size: $font-size-sm;
+      }
+
+      code {
+        background-color: $background-light;
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        font-family: monospace;
+        font-size: $font-size-sm;
+        color: $text-secondary;
+      }
+    }
+
+    .api-key-actions {
+      display: flex;
+      gap: $spacing-sm;
+    }
+  }
+}
+
+.appearance-settings {
+  .theme-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: $spacing-lg;
+    margin-top: $spacing-md;
+  }
+
+  .theme-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-md;
+    cursor: pointer;
+    margin: 0 !important;
+
+    input[type="radio"] {
+      display: none;
+    }
+
+    &:hover .theme-preview {
+      transform: scale(1.05);
+    }
+
+    input[type="radio"]:checked + .theme-preview {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+    }
+
+    span {
+      font-weight: 500;
+      color: $text-primary;
+    }
+  }
+
+  .theme-preview {
+    width: 120px;
+    height: 80px;
+    border: 2px solid $border-color;
+    border-radius: $border-radius-md;
+    overflow: hidden;
+    transition: all 0.2s ease;
+
+    &__header {
+      height: 16px;
+      background-color: $background-light;
+    }
+
+    &__content {
+      display: flex;
+      height: calc(100% - 16px);
+    }
+
+    &__sidebar {
+      width: 30%;
+      background-color: $background-gray;
+    }
+
+    &__main {
+      flex: 1;
+      background-color: $background-color;
+    }
+
+    &--light {
+      .theme-preview__header {
+        background-color: #f8f9fa;
+      }
+      .theme-preview__sidebar {
+        background-color: #e9ecef;
+      }
+      .theme-preview__main {
+        background-color: #ffffff;
+      }
+    }
+
+    &--dark {
+      .theme-preview__header {
+        background-color: #343a40;
+      }
+      .theme-preview__sidebar {
+        background-color: #495057;
+      }
+      .theme-preview__main {
+        background-color: #212529;
+      }
+    }
+
+    &--auto {
+      background: linear-gradient(45deg, #ffffff 50%, #212529 50%);
+      
+      .theme-preview__header {
+        background: linear-gradient(90deg, #f8f9fa 50%, #343a40 50%);
+      }
+      .theme-preview__sidebar {
+        background: linear-gradient(90deg, #e9ecef 50%, #495057 50%);
+      }
+      .theme-preview__main {
+        background: linear-gradient(90deg, #ffffff 50%, #212529 50%);
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .settings {
+    &__layout {
+      gap: $spacing-lg;
+    }
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .security-actions {
+    flex-direction: column;
+  }
+
+  .api-keys .api-key-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-md;
+
+    .api-key-actions {
+      justify-content: center;
+    }
+  }
+
+  .appearance-settings .theme-options {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,133 @@
+
+
+
+
+.sidebar {
+  width: 260px;
+  background-color: $background-color;
+  border-right: 1px solid $border-color;
+  transition: all 0.3s ease;
+  height: calc(100vh - 64px);
+  position: fixed; // Make sidebar fixed
+  left: 0;
+  top: 64px; // Below header
+  z-index: 100;
+  overflow: hidden; // Disable scrolling
+
+  &--collapsed {
+    width: 70px;
+
+    .sidebar__link-text {
+      display: none;
+    }
+
+    .sidebar__link {
+      justify-content: center;
+      padding: $spacing-md;
+    }
+  }
+
+  &__nav {
+    padding: $spacing-md 0;
+    height: 100%;
+    overflow-y: auto; // Enable scroll only for nav content
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    color: $text-secondary;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: $font-size-sm;
+
+    &:hover {
+      background-color: $background-light;
+      color: $text-primary;
+    }
+
+    &--active {
+      background-color: rgba($primary-color, 0.1);
+      color: $primary-color;
+      border-right: 3px solid $primary-color;
+
+      &:hover {
+        background-color: rgba($primary-color, 0.15);
+      }
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  &__link-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__mobile-toggle {
+    display: none;
+    position: fixed;
+    top: $spacing-md;
+    left: $spacing-md;
+    z-index: 1000;
+    margin-top: 3px;
+    background-color: rgb(8, 14, 39);
+    color: $text-secondary;
+    border: none;
+    border-radius: 4px;
+    padding: 1px 5px;
+    cursor: pointer;
+
+    @media (max-width: $breakpoint-lg) {
+      display: block;
+    }
+  }
+
+  @media (max-width: $breakpoint-lg) {
+    left: -260px; // Hide by default on mobile
+    box-shadow: $shadow-lg;
+    transition: left 0.3s ease;
+
+    &--collapsed {
+      left: -70px;
+      width: 70px;
+    }
+
+    &--mobile-open {
+      left: 0;
+      
+      &.sidebar--collapsed {
+        left: 0;
+      }
+    }
+  }
+}
+
+// Add backdrop for mobile
+.sidebar-backdrop {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &--visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (min-width: $breakpoint-lg) {
+    display: none;
+  }
+}
