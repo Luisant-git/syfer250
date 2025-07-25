@@ -15,6 +15,7 @@ import PlansAndBilling from "./pages/PlansAndBilling/PlansAndBilling"
 import "./styles/global.scss"
 
 function App() {
+  
   return (
     <Router>
       <Layout>

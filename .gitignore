@@ -1,0 +1,69 @@
+# Node modules
+
+node_modules/
+ 
+# Build output
+
+dist/
+ 
+# Local env files
+
+.env
+
+.env.local
+
+.env.*.local
+ 
+# Vite cache
+
+.vite/
+ 
+# Log files
+
+npm-debug.log*
+
+yarn-debug.log*
+
+yarn-error.log*
+
+pnpm-debug.log*
+ 
+# IDE files
+
+.vscode/
+
+.idea/
+
+*.sublime-project
+
+*.sublime-workspace
+ 
+# System files
+
+.DS_Store
+
+Thumbs.db
+ 
+# macOS and Linux trash
+
+.trash/
+
+.Trashes
+ 
+# Windows system files
+
+desktop.ini
+ 
+# Coverage and testing
+
+coverage/
+
+*.lcov
+ 
+# Optional: if you're using eslint or prettier cache
+
+.eslintcache
+
+.prettiercache
+
+ 
