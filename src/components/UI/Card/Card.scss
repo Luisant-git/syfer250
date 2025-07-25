@@ -20,6 +20,7 @@
     h1, h2, h3, h4, h5, h6 {
       margin: 0;
       color: $text-primary;
+      font-size: $font-size-lg; // Default for desktop
     }
   }
 
@@ -31,5 +32,46 @@
     padding: $spacing-lg $spacing-xl;
     border-top: 1px solid $border-light;
     background-color: $background-light;
+  }
+
+  // =========================================
+  // Responsive adjustments for mobile devices
+  // =========================================
+  @media (max-width: $breakpoint-md) {
+    border-radius: $border-radius-md;
+
+    &--padded {
+      padding: $spacing-lg;
+    }
+
+    &__header,
+    &__body,
+    &__footer {
+      padding: $spacing-lg;
+    }
+
+    &__header h1,
+    &__header h2,
+    &__header h3 {
+      font-size: $font-size-base; // Slightly smaller for mobile
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    &--padded {
+      padding: $spacing-md;
+    }
+
+    &__header,
+    &__body,
+    &__footer {
+      padding: $spacing-md;
+    }
+
+    &__header h1,
+    &__header h2,
+    &__header h3 {
+      font-size: $font-size-sm; // Smaller on very small screens
+    }
   }
 }

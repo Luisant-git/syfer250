@@ -1,7 +1,7 @@
 @import "./steps/steps";
 @import "./steps/EmailEditor";
 
-// Example premium variables (adjust as needed)
+// Premium variables (exactly as you defined them)
 $glass-bg: rgba(255, 255, 255, 0.7);
 $glass-blur: 16px;
 $shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
@@ -16,15 +16,23 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 10000px;
   margin: -30px auto;
   background: $glass-bg;
-  // box-shadow: $shadow-lg;
   border-radius: 1px;
   backdrop-filter: blur($glass-blur);
   padding: 2.5rem 2rem 2rem 2rem;
   position: relative;
   overflow: hidden;
 
+  // Mobile adjustments (only changing spacing)
+  @media (max-width: $breakpoint-md) {
+    padding: 2rem 1.5rem;
+    margin: -20px auto;
+  }
+  @media (max-width: $breakpoint-sm) {
+    padding: 1.5rem 1rem;
+    margin: -10px auto;
+  }
+
   &::before {
-    // Decorative gradient overlay
     content: "";
     position: absolute;
     top: -80px; left: -80px;
@@ -34,6 +42,14 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 50%;
     z-index: 0;
     pointer-events: none;
+
+    // Only scaling down for mobile
+    @media (max-width: $breakpoint-sm) {
+      top: -50px;
+      left: -50px;
+      width: 200px;
+      height: 200px;
+    }
   }
 
   &__header {
@@ -50,6 +66,14 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       letter-spacing: -1px;
       text-shadow: 0 2px 8px rgba($primary-color, 0.08);
       font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+
+      // Only adjusting size for mobile
+      @media (max-width: $breakpoint-md) {
+        font-size: 2rem;
+      }
+      @media (max-width: $breakpoint-sm) {
+        font-size: 1.75rem;
+      }
     }
 
     p {
@@ -57,6 +81,10 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: $font-size-lg;
       margin: 0;
       opacity: 0.85;
+
+      @media (max-width: $breakpoint-sm) {
+        font-size: $font-size-md;
+      }
     }
   }
 
@@ -76,6 +104,11 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
     transition: box-shadow $transition-fast, background $transition-fast;
+
+    @media (max-width: $breakpoint-sm) {
+      padding: 1.5rem 1rem;
+      min-height: auto;
+    }
   }
 
   &__navigation {
@@ -89,6 +122,7 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     @media (max-width: $breakpoint-sm) {
       flex-direction: column;
       gap: $spacing-md;
+      padding: $spacing-md 0;
     }
 
     button, .btn {
@@ -114,6 +148,10 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         background: $secondary-color;
         transform: scale(0.98);
       }
+
+      @media (max-width: $breakpoint-sm) {
+        width: 100%;
+      }
     }
   }
 
@@ -126,6 +164,10 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0.5rem;
     z-index: 1;
     position: relative;
+
+    @media (max-width: $breakpoint-sm) {
+      text-align: center;
+    }
   }
 }
 
@@ -140,10 +182,17 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: $shadow-md;
   position: relative;
   z-index: 1;
+  -webkit-overflow-scrolling: touch;
 
   @media (max-width: $breakpoint-md) {
     justify-content: flex-start;
-    gap: $spacing-lg;
+    gap: $spacing-md;
+    padding: $spacing-md;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: $spacing-sm;
+    gap: $spacing-sm;
   }
 }
 
@@ -171,7 +220,11 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 2;
 
-    // Add subtle glow on hover
+    @media (max-width: $breakpoint-sm) {
+      width: 36px;
+      height: 36px;
+    }
+
     &:hover {
       box-shadow: 0 0 0 4px rgba($primary-color, 0.10);
       cursor: pointer;
@@ -206,6 +259,11 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     @media (max-width: $breakpoint-md) {
       width: 40px;
       margin: 0 $spacing-md;
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      width: 20px;
+      margin: 0 $spacing-sm;
     }
   }
 
@@ -242,8 +300,30 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-// Pulse animation for active step
 @keyframes pulse {
   0% { box-shadow: 0 0 0 6px rgba($primary-color, 0.12); }
   100% { box-shadow: 0 0 0 12px rgba($primary-color, 0.18); }
+}
+
+
+
+
+
+/* Remove scrollbar track and thumb */
+.progress-steps::-webkit-scrollbar {
+  width: 0;  /* Remove vertical scrollbar */
+  height: 0; /* Remove horizontal scrollbar */
+}
+
+.progress-steps {
+  scrollbar-width: none;   /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.progress-steps::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.progress-steps::-webkit-scrollbar-thumb {
+  background: transparent;
 }

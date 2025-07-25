@@ -241,6 +241,7 @@
   }
   &__actions {
     display: flex;
+   
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 0.5rem;
@@ -263,5 +264,11 @@
         background: #e6e8f0;
       }
     }
+    .user-dropdown__action-btn span {
+  display: inline !important;
+  visibility: visible !important;
+  color: $text-primary !important;
+}
+
   }
 }
