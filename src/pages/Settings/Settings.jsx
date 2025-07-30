@@ -1,9 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { Save, Bell, Mail, Shield, Database, Palette, Globe } from "lucide-react"
+import {
+  Save,
+  Bell,
+  Mail,
+  Shield,
+  Database,
+  Palette,
+  Globe,
+} from "lucide-react"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
+import Security from "../Security/Security"
 import "./Settings.scss"
 
 const Settings = () => {
@@ -40,6 +49,7 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("general")
   const [isSaving, setIsSaving] = useState(false)
 
+  // Remove types for plain JS!
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -306,44 +316,7 @@ const Settings = () => {
 
           {/* Security Settings */}
           {activeTab === "security" && (
-            <Card>
-              <Card.Header>
-                <h2>Security Settings</h2>
-                <p>Manage your account security preferences</p>
-              </Card.Header>
-              <Card.Body>
-                <div className="security-settings">
-                  <div className="security-group">
-                    <h3>Authentication</h3>
-                    <div className="checkbox-group">
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={settings.twoFactorEnabled}
-                          onChange={(e) => handleSettingChange("twoFactorEnabled", e.target.checked)}
-                        />
-                        <span>Enable Two-Factor Authentication</span>
-                      </label>
-
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={settings.ipWhitelisting}
-                          onChange={(e) => handleSettingChange("ipWhitelisting", e.target.checked)}
-                        />
-                        <span>Enable IP Whitelisting</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="security-actions">
-                    <Button variant="outline">Change Password</Button>
-                    <Button variant="outline">Download Security Log</Button>
-                    <Button variant="danger">Revoke All Sessions</Button>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
+            <Security />
           )}
 
           {/* API Settings */}

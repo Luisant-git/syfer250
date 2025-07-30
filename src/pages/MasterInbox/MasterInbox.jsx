@@ -1,45 +1,12 @@
 "use client"
-
 import { useState } from "react"
-import { Plus, Mail, Search, Filter, Archive, Trash2, Reply, Forward, Star } from "lucide-react"
+import { Plus, Mail, Search, Filter, Archive, Trash2, Reply, Forward, Star, List, Grid } from "lucide-react"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
 import "./MasterInbox.scss"
 
-
 const MasterInbox = () => {
-  const [selectedAccount, setSelectedAccount] = useState("all")
-  const [selectedEmail, setSelectedEmail] = useState(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showConnectModal, setShowConnectModal] = useState(false)
-
-  const emailAccounts = [
-    {
-      id: "gmail-1",
-      email: "john@company.com",
-      provider: "Gmail",
-      status: "connected",
-      unreadCount: 12,
-      avatar: "JD",
-    },
-    {
-      id: "outlook-1",
-      email: "marketing@company.com",
-      provider: "Outlook",
-      status: "connected",
-      unreadCount: 5,
-      avatar: "MC",
-    },
-    {
-      id: "smtp-1",
-      email: "support@company.com",
-      provider: "SMTP",
-      status: "connected",
-      unreadCount: 8,
-      avatar: "SC",
-    },
-  ]
-
+  // First declare emails array since other variables depend on it
   const emails = [
     {
       id: 1,
@@ -52,6 +19,7 @@ const MasterInbox = () => {
       isStarred: true,
       account: "gmail-1",
       labels: ["Important", "Follow-up"],
+      folder: "inbox"
     },
     {
       id: 2,
@@ -64,6 +32,7 @@ const MasterInbox = () => {
       isStarred: false,
       account: "outlook-1",
       labels: ["Business"],
+      folder: "inbox"
     },
     {
       id: 3,
@@ -76,6 +45,7 @@ const MasterInbox = () => {
       isStarred: false,
       account: "gmail-1",
       labels: ["Meeting"],
+      folder: "important"
     },
     {
       id: 4,
@@ -88,8 +58,56 @@ const MasterInbox = () => {
       isStarred: true,
       account: "smtp-1",
       labels: ["Reports"],
+      folder: "archived"
     },
   ]
+
+  // Then declare folders which uses emails
+  const folders = [
+    { id: "inbox", name: "Inbox", icon: <Mail size={16} />, count: emails.filter(e => e.folder === "inbox").length },
+    { id: "unused", name: "Unused Regions", icon: <Mail size={16} />, count: 0 },
+    { id: "important", name: "Important", icon: <Star size={16} />, count: emails.filter(e => e.folder === "important").length },
+    { id: "snoozed", name: "Snoozed", icon: <Mail size={16} />, count: 0 },
+    { id: "reminders", name: "Reminders", icon: <Mail size={16} />, count: 0 },
+    { id: "scheduled", name: "Scheduled", icon: <Mail size={16} />, count: 0 },
+    { id: "archived", name: "Archived", icon: <Archive size={16} />, count: emails.filter(e => e.folder === "archived").length },
+  ]
+
+  // Then declare emailAccounts which also uses emails
+  const emailAccounts = [
+    {
+      id: "gmail-1",
+      email: "john@company.com",
+      provider: "Gmail",
+      status: "connected",
+      unreadCount: emails.filter(e => e.account === "gmail-1" && !e.isRead).length,
+      avatar: "JD",
+    },
+    {
+      id: "outlook-1",
+      email: "marketing@company.com",
+      provider: "Outlook",
+      status: "connected",
+      unreadCount: emails.filter(e => e.account === "outlook-1" && !e.isRead).length,
+      avatar: "MC",
+    },
+    {
+      id: "smtp-1",
+      email: "support@company.com",
+      provider: "SMTP",
+      status: "connected",
+      unreadCount: emails.filter(e => e.account === "smtp-1" && !e.isRead).length,
+      avatar: "SC",
+    },
+  ]
+
+  // State declarations
+  const [selectedAccount, setSelectedAccount] = useState("all")
+  const [selectedEmail, setSelectedEmail] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showConnectModal, setShowConnectModal] = useState(false)
+  const [viewMode, setViewMode] = useState("unified") // 'unified' or 'separate'
+  const [activeFolder, setActiveFolder] = useState("inbox")
 
   const filteredEmails = emails.filter((email) => {
     const matchesAccount = selectedAccount === "all" || email.account === selectedAccount
@@ -97,7 +115,8 @@ const MasterInbox = () => {
       email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.fromName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.preview.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesAccount && matchesSearch
+    const matchesFolder = activeFolder === "inbox" || email.folder === activeFolder
+    return matchesAccount && matchesSearch && matchesFolder
   })
 
   const getAccountById = (id) => emailAccounts.find((acc) => acc.id === id)
@@ -106,15 +125,64 @@ const MasterInbox = () => {
     <div className="master-inbox">
       <div className="inbox-header">
         <h1>Master Inbox</h1>
-        <Button variant="primary" onClick={() => setShowConnectModal(true)}>
-          <Plus size={16} />
-          Connect Email Account
-        </Button>
+        <div className="header-actions">
+          <div className="view-toggle">
+            <Button 
+              variant={viewMode === "unified" ? "primary" : "outline"} 
+              size="small"
+              onClick={() => setViewMode("unified")}
+            >
+              <Grid size={16} />
+              <span>Unified</span>
+            </Button>
+            <Button 
+              variant={viewMode === "separate" ? "primary" : "outline"} 
+              size="small"
+              onClick={() => setViewMode("separate")}
+            >
+              <List size={16} />
+              <span>Separate</span>
+            </Button>
+          </div>
+          <Button variant="primary" onClick={() => setShowConnectModal(true)}>
+            <Plus size={16} />
+            Connect Email Account
+          </Button>
+        </div>
       </div>
 
       <div className="inbox-layout">
-        {/* Sidebar - Email Accounts */}
+        {/* Sidebar - Folders and Email Accounts */}
         <div className="inbox-sidebar">
+          {/* Folders Card - Now at the top */}
+          <Card className="folders-card">
+            <Card.Header>
+              <h3>Folders</h3>
+            </Card.Header>
+            <Card.Body className="p-0">
+              <div className="folder-list">
+                {folders.map((folder) => (
+                  <div
+                    key={folder.id}
+                    className={`folder-item ${activeFolder === folder.id ? "folder-item--active" : ""}`}
+                    onClick={() => setActiveFolder(folder.id)}
+                  >
+                    <div className="folder-item__icon">
+                      {folder.icon}
+                    </div>
+                    <div className="folder-item__name">{folder.name}</div>
+                    {folder.count > 0 && (
+                      <div className="folder-item__count">
+                        {folder.count}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* Email Accounts Card */}
           <Card>
             <Card.Header>
               <h3>Email Accounts</h3>
@@ -192,7 +260,10 @@ const MasterInbox = () => {
                   <div className="empty-state">
                     <Mail size={48} />
                     <h3>No emails found</h3>
-                    <p>Try adjusting your search or filters</p>
+                    <p>{viewMode === "unified" ? 
+                      "Your unified inbox is empty" : 
+                      "No emails in this folder"}
+                    </p>
                   </div>
                 ) : (
                   filteredEmails.map((email) => (

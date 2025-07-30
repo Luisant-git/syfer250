@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard/Dashboard"
 import NewCampaign from "./pages/NewCampaign/NewCampaign"
 // import Templates from "./pages/Templates/Templates"
 import MasterInbox from "./pages/MasterInbox/MasterInbox"
-// import Analytics from "./pages/Analytics/Analytics"
+import Analytics from "./pages/Analytics/Reports"
 // import Contacts from "./pages/Contacts/Contacts"
 import Settings from "./pages/Settings/Settings"
 import Profile from "./pages/Profile/Profile"
@@ -26,7 +26,7 @@ function App() {
           <Route path="/campaigns/new" element={<NewCampaign />} />
           {/* <Route path="/templates" element={<Templates />} /> */}
           <Route path="/inbox" element={<MasterInbox />} />
-          {/* <Route path="/analytics" element={<Analytics />} /> */}
+          <Route path="/analytics" element={<Analytics />} />
           {/* <Route path="/contacts" element={<Contacts />} /> */}
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />

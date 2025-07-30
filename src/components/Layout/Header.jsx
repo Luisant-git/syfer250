@@ -1,17 +1,27 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import navigate hook
+import { useNavigate } from "react-router-dom";
 import { Menu, Bell, User, Search, Settings, LogOut } from "lucide-react";
 import "./Header.scss";
 
 const Header = ({ toggleSidebar }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef(null);
   const userButtonRef = useRef(null);
   const [closing, setClosing] = useState(false);
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -30,7 +40,6 @@ const Header = ({ toggleSidebar }) => {
     };
   }, []);
 
-  // Smooth close animation
   const handleMouseLeave = () => {
     setClosing(true);
     setTimeout(() => {
@@ -38,21 +47,26 @@ const Header = ({ toggleSidebar }) => {
         setIsUserDropdownOpen(false);
         setClosing(false);
       }
-    }, 500); // Match this with your CSS transition duration
+    }, 500);
   };
 
   const handleDropdownClose = () => {
     setIsUserDropdownOpen(false);
   };
 
+  const goToProfile = () => {
+    handleDropdownClose();
+    navigate("/profile");
+  };
+
   const goToSettings = () => {
     handleDropdownClose();
-    navigate("/profile"); // Navigate to settings page
+    navigate("/settings");
   };
 
   const goToLogout = () => {
     handleDropdownClose();
-    navigate("/logout"); // Navigate to logout page
+    navigate("/logout");
   };
 
   return (
@@ -67,34 +81,44 @@ const Header = ({ toggleSidebar }) => {
       </div>
 
       <div className="header__center">
-        <div className="header__search">
+        {/* <div className="header__search">
           <Search size={16} />
           <input type="text" placeholder="Search campaigns, contacts..." />
-        </div>
+        </div> */}
       </div>
 
       <div className="header__right">
         <button className="header__notification">
           <Bell size={20} />
-          <span className="header__notification-badge">3</span>
+          {!isMobile && <span className="header__notification-badge">3</span>}
         </button>
+        
+        <button 
+          className="header__action-btn"
+          onClick={goToSettings}
+        >
+          <Settings size={20} />
+          {/* {!isMobile && <span>Settings</span>} */}
+        </button>
+        
         <div
           className="header__user"
           ref={userButtonRef}
-          onMouseEnter={() => {
+          onClick={isMobile ? () => setIsUserDropdownOpen(!isUserDropdownOpen) : undefined}
+          onMouseEnter={!isMobile ? () => {
             setClosing(false);
             setIsUserDropdownOpen(true);
-          }}
-          onMouseLeave={handleMouseLeave}
+          } : undefined}
+          onMouseLeave={!isMobile ? handleMouseLeave : undefined}
         >
           <User size={20} />
-          <span>Anesh</span>
+          {!isMobile && <span>Anesh</span>}
           {isUserDropdownOpen && (
             <div
-              className={`user-dropdown ${closing ? "closing" : ""}`}
+              className={`user-dropdown ${closing ? "closing" : ""} ${isMobile ? "mobile" : ""}`}
               ref={dropdownRef}
-              onMouseEnter={() => setClosing(false)}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={!isMobile ? () => setClosing(false) : undefined}
+              onMouseLeave={!isMobile ? handleMouseLeave : undefined}
             >
               <div className="user-dropdown__header">
                 <div className="user-dropdown__avatar">
@@ -131,11 +155,11 @@ const Header = ({ toggleSidebar }) => {
               <div className="user-dropdown__actions">
                 <button
                   type="button"
-                  onClick={goToSettings}
+                  onClick={goToProfile}
                   className="user-dropdown__action-btn"
                 >
-                  <Settings size={18} />
-                  <span>Settings</span>
+                  <User size={18} />
+                  <span>Profile</span>
                 </button>
                 <button
                   type="button"

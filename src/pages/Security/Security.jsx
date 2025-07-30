@@ -239,10 +239,11 @@ const Security = () => {
         {/* Two-Factor Authentication */}
         <Card>
           <Card.Header>
-            <h2>
-              <Smartphone size={20} />
-              Two-Factor Authentication
-            </h2>
+           <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+  <Smartphone size={20} />
+  Two-Factor Authentication
+</h2>
+
           </Card.Header>
           <Card.Body>
             <div className="two-factor-section">
@@ -415,10 +416,11 @@ const Security = () => {
         {/* Security Recommendations */}
         <Card>
           <Card.Header>
-            <h2>
-              <AlertTriangle size={20} />
-              Security Recommendations
-            </h2>
+           <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+  <AlertTriangle size={20} />
+  Security Recommendations
+</h2>
+
           </Card.Header>
           <Card.Body>
             <div className="security-recommendations">

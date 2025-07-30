@@ -4,6 +4,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: $spacing-xl;
+    gap: $spacing-lg;
 
     h1 {
       font-size: $font-size-xxxl;
@@ -12,10 +13,33 @@
       margin: 0;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: $spacing-xs;
+
+      button {
+        padding: $spacing-xs $spacing-sm;
+      }
+
+      span {
+        margin-left: $spacing-xs;
+      }
+    }
+
     @media (max-width: $breakpoint-md) {
       flex-direction: column;
-      gap: $spacing-lg;
       align-items: stretch;
+      
+      .header-actions {
+        flex-direction: column;
+        gap: $spacing-sm;
+      }
     }
   }
 
@@ -48,6 +72,55 @@
   }
 
   .inbox-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+
+    // Folders Card - now at the top
+    .folders-card {
+      margin-bottom: $spacing-lg;
+    }
+
+    .folder-list {
+      .folder-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        padding: $spacing-md $spacing-lg;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid $border-light;
+
+        &:hover {
+          background-color: $background-light;
+        }
+
+        &--active {
+          background-color: rgba($primary-color, 0.1);
+          border-right: 3px solid $primary-color;
+        }
+
+        &__icon {
+          color: $text-secondary;
+        }
+
+        &__name {
+          flex: 1;
+          font-weight: 500;
+          color: $text-primary;
+          font-size: $font-size-sm;
+        }
+
+        &__count {
+          color: $text-muted;
+          font-size: $font-size-xs;
+          background-color: $background-light;
+          padding: 2px 6px;
+          border-radius: 10px;
+        }
+      }
+    }
+
     .account-list {
       .account-item {
         display: flex;
@@ -512,6 +585,7 @@
   }
 }
 
+// Mobile specific styles
 @media (max-width: $breakpoint-md) {
   .master-inbox {
     .inbox-layout {
@@ -524,6 +598,42 @@
         z-index: 999;
         background-color: $background-color;
         display: block !important;
+      }
+    }
+
+    .inbox-sidebar {
+      .folders-card {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .master-inbox {
+    .inbox-header {
+      h1 {
+        font-size: $font-size-xxl;
+      }
+    }
+
+    .inbox-sidebar {
+      .folder-list {
+        .folder-item {
+          padding: $spacing-sm $spacing-md;
+        }
+      }
+
+      .account-list {
+        .account-item {
+          padding: $spacing-sm $spacing-md;
+        }
+      }
+    }
+
+    .email-list {
+      .email-item {
+        padding: $spacing-md;
       }
     }
   }
