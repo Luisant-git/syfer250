@@ -27,11 +27,11 @@ const Sidebar = ({ collapsed }) => {
     // { path: "/campaigns/new", icon: Plus, label: "New Campaign" },
     // { path: "/templates", icon: FileText, label: "Templates" },
     { path: "/inbox", icon: Inbox, label: "Master Inbox" },
-    { path: "/analytics", icon: BarChart3, label: "Analytics" },
+    { path: "/report", icon: BarChart3, label: "Report" },
     // { path: "/contacts", icon: Users, label: "Contacts" },
     { path: "/settings", icon: Settings, label: "Settings" },
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/security", icon: Shield, label: "Security" },
+    // { path: "/security", icon: Shield, label: "Security" },
     { path: "/global-block-list", icon: Ban, label: "Global Block List" },
     { path: "/plans-billing", icon: CreditCard, label: "Plans & Billing" },
   ];
