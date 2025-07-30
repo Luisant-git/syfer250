@@ -5,7 +5,6 @@ import { Download, Filter, TrendingUp, Mail, MousePointer, Reply } from "lucide-
 import Card from "../../components/UI/Card/Card"
 import Button from "../../components/UI/Button/Button"
 import Table from "../../components/UI/Table/Table"
-import Modal from "../../components/UI/Modal/Modal"
 import "./Reports.scss"
 
 const Reports = () => {
@@ -148,6 +147,25 @@ const Reports = () => {
     </Table>
   )
 
+  // Inline Modal implementation (styled in Reports.scss)
+  const ExportModal = ({ open, onClose, children, footer }) => {
+    if (!open) return null
+    return (
+      <div className="export-modal-backdrop">
+        <div className="export-modal">
+          <div className="export-modal__header">
+            <h3 className="export-modal__title">Export Reports</h3>
+            <button className="export-modal__close" onClick={onClose} aria-label="Close">
+              &times;
+            </button>
+          </div>
+          <div className="export-modal__body">{children}</div>
+          <div className="export-modal__footer">{footer}</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="reports">
       <div className="reports__header">
@@ -267,13 +285,10 @@ const Reports = () => {
           </Card>
         </div>
       </div>
-       
-       
-      <Modal
-        isOpen={showExportModal}
+
+      <ExportModal
+        open={showExportModal}
         onClose={() => setShowExportModal(false)}
-        title="Export Reports"
-        size="md"
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowExportModal(false)}>
@@ -318,7 +333,7 @@ const Reports = () => {
             </div>
           </div>
         </div>
-      </Modal>
+      </ExportModal>
     </div>
   )
 }

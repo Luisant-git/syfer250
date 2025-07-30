@@ -1,9 +1,21 @@
-"use client"
-import { useState } from "react"
-import { Plus, Mail, Search, Filter, Archive, Trash2, Reply, Forward, Star, List, Grid } from "lucide-react"
-import Button from "../../components/UI/Button/Button"
-import Card from "../../components/UI/Card/Card"
-import "./MasterInbox.scss"
+"use client";
+import { useState } from "react";
+import {
+  Plus,
+  Mail,
+  Search,
+  Filter,
+  Archive,
+  Trash2,
+  Reply,
+  Forward,
+  Star,
+  List,
+  Grid,
+} from "lucide-react";
+import Button from "../../components/UI/Button/Button";
+import Card from "../../components/UI/Card/Card";
+import "./MasterInbox.scss";
 
 const MasterInbox = () => {
   // First declare emails array since other variables depend on it
@@ -13,26 +25,28 @@ const MasterInbox = () => {
       from: "alice@example.com",
       fromName: "Alice Johnson",
       subject: "Re: Product Demo Request",
-      preview: "Thank you for the demo. I have a few questions about the pricing...",
+      preview:
+        "Thank you for the demo. I have a few questions about the pricing...",
       time: "2 hours ago",
       isRead: false,
       isStarred: true,
       account: "gmail-1",
       labels: ["Important", "Follow-up"],
-      folder: "inbox"
+      folder: "inbox",
     },
     {
       id: 2,
       from: "bob@startup.com",
       fromName: "Bob Smith",
       subject: "Partnership Opportunity",
-      preview: "Hi there, I came across your company and would love to discuss...",
+      preview:
+        "Hi there, I came across your company and would love to discuss...",
       time: "4 hours ago",
       isRead: true,
       isStarred: false,
       account: "outlook-1",
       labels: ["Business"],
-      folder: "inbox"
+      folder: "inbox",
     },
     {
       id: 3,
@@ -45,33 +59,54 @@ const MasterInbox = () => {
       isStarred: false,
       account: "gmail-1",
       labels: ["Meeting"],
-      folder: "important"
+      folder: "important",
     },
     {
       id: 4,
       from: "mike@agency.com",
       fromName: "Mike Davis",
       subject: "Campaign Results",
-      preview: "The latest campaign performed exceptionally well. Here are the metrics...",
+      preview:
+        "The latest campaign performed exceptionally well. Here are the metrics...",
       time: "2 days ago",
       isRead: true,
       isStarred: true,
       account: "smtp-1",
       labels: ["Reports"],
-      folder: "archived"
+      folder: "archived",
     },
-  ]
+  ];
 
   // Then declare folders which uses emails
   const folders = [
-    { id: "inbox", name: "Inbox", icon: <Mail size={16} />, count: emails.filter(e => e.folder === "inbox").length },
-    { id: "unused", name: "Unused Regions", icon: <Mail size={16} />, count: 0 },
-    { id: "important", name: "Important", icon: <Star size={16} />, count: emails.filter(e => e.folder === "important").length },
+    {
+      id: "inbox",
+      name: "Inbox",
+      icon: <Mail size={16} />,
+      count: emails.filter((e) => e.folder === "inbox").length,
+    },
+    {
+      id: "unused",
+      name: "Unused Regions",
+      icon: <Mail size={16} />,
+      count: 0,
+    },
+    {
+      id: "important",
+      name: "Important",
+      icon: <Star size={16} />,
+      count: emails.filter((e) => e.folder === "important").length,
+    },
     { id: "snoozed", name: "Snoozed", icon: <Mail size={16} />, count: 0 },
     { id: "reminders", name: "Reminders", icon: <Mail size={16} />, count: 0 },
     { id: "scheduled", name: "Scheduled", icon: <Mail size={16} />, count: 0 },
-    { id: "archived", name: "Archived", icon: <Archive size={16} />, count: emails.filter(e => e.folder === "archived").length },
-  ]
+    {
+      id: "archived",
+      name: "Archived",
+      icon: <Archive size={16} />,
+      count: emails.filter((e) => e.folder === "archived").length,
+    },
+  ];
 
   // Then declare emailAccounts which also uses emails
   const emailAccounts = [
@@ -80,7 +115,8 @@ const MasterInbox = () => {
       email: "john@company.com",
       provider: "Gmail",
       status: "connected",
-      unreadCount: emails.filter(e => e.account === "gmail-1" && !e.isRead).length,
+      unreadCount: emails.filter((e) => e.account === "gmail-1" && !e.isRead)
+        .length,
       avatar: "JD",
     },
     {
@@ -88,7 +124,8 @@ const MasterInbox = () => {
       email: "marketing@company.com",
       provider: "Outlook",
       status: "connected",
-      unreadCount: emails.filter(e => e.account === "outlook-1" && !e.isRead).length,
+      unreadCount: emails.filter((e) => e.account === "outlook-1" && !e.isRead)
+        .length,
       avatar: "MC",
     },
     {
@@ -96,30 +133,33 @@ const MasterInbox = () => {
       email: "support@company.com",
       provider: "SMTP",
       status: "connected",
-      unreadCount: emails.filter(e => e.account === "smtp-1" && !e.isRead).length,
+      unreadCount: emails.filter((e) => e.account === "smtp-1" && !e.isRead)
+        .length,
       avatar: "SC",
     },
-  ]
+  ];
 
   // State declarations
-  const [selectedAccount, setSelectedAccount] = useState("all")
-  const [selectedEmail, setSelectedEmail] = useState(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showConnectModal, setShowConnectModal] = useState(false)
-  const [viewMode, setViewMode] = useState("unified") // 'unified' or 'separate'
-  const [activeFolder, setActiveFolder] = useState("inbox")
+  const [selectedAccount, setSelectedAccount] = useState("all");
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [viewMode, setViewMode] = useState("unified"); // 'unified' or 'separate'
+  const [activeFolder, setActiveFolder] = useState("inbox");
 
   const filteredEmails = emails.filter((email) => {
-    const matchesAccount = selectedAccount === "all" || email.account === selectedAccount
+    const matchesAccount =
+      selectedAccount === "all" || email.account === selectedAccount;
     const matchesSearch =
       email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.fromName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.preview.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFolder = activeFolder === "inbox" || email.folder === activeFolder
-    return matchesAccount && matchesSearch && matchesFolder
-  })
+      email.preview.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFolder =
+      activeFolder === "inbox" || email.folder === activeFolder;
+    return matchesAccount && matchesSearch && matchesFolder;
+  });
 
-  const getAccountById = (id) => emailAccounts.find((acc) => acc.id === id)
+  const getAccountById = (id) => emailAccounts.find((acc) => acc.id === id);
 
   return (
     <div className="master-inbox">
@@ -127,16 +167,16 @@ const MasterInbox = () => {
         <h1>Master Inbox</h1>
         <div className="header-actions">
           <div className="view-toggle">
-            <Button 
-              variant={viewMode === "unified" ? "primary" : "outline"} 
+            <Button
+              variant={viewMode === "unified" ? "primary" : "outline"}
               size="small"
               onClick={() => setViewMode("unified")}
             >
               <Grid size={16} />
               <span>Unified</span>
             </Button>
-            <Button 
-              variant={viewMode === "separate" ? "primary" : "outline"} 
+            <Button
+              variant={viewMode === "separate" ? "primary" : "outline"}
               size="small"
               onClick={() => setViewMode("separate")}
             >
@@ -164,17 +204,15 @@ const MasterInbox = () => {
                 {folders.map((folder) => (
                   <div
                     key={folder.id}
-                    className={`folder-item ${activeFolder === folder.id ? "folder-item--active" : ""}`}
+                    className={`folder-item ${
+                      activeFolder === folder.id ? "folder-item--active" : ""
+                    }`}
                     onClick={() => setActiveFolder(folder.id)}
                   >
-                    <div className="folder-item__icon">
-                      {folder.icon}
-                    </div>
+                    <div className="folder-item__icon">{folder.icon}</div>
                     <div className="folder-item__name">{folder.name}</div>
                     {folder.count > 0 && (
-                      <div className="folder-item__count">
-                        {folder.count}
-                      </div>
+                      <div className="folder-item__count">{folder.count}</div>
                     )}
                   </div>
                 ))}
@@ -190,7 +228,9 @@ const MasterInbox = () => {
             <Card.Body className="p-0">
               <div className="account-list">
                 <div
-                  className={`account-item ${selectedAccount === "all" ? "account-item--active" : ""}`}
+                  className={`account-item ${
+                    selectedAccount === "all" ? "account-item--active" : ""
+                  }`}
                   onClick={() => setSelectedAccount("all")}
                 >
                   <div className="account-item__avatar">
@@ -199,7 +239,11 @@ const MasterInbox = () => {
                   <div className="account-item__info">
                     <div className="account-item__name">All Accounts</div>
                     <div className="account-item__count">
-                      {emailAccounts.reduce((sum, acc) => sum + acc.unreadCount, 0)} unread
+                      {emailAccounts.reduce(
+                        (sum, acc) => sum + acc.unreadCount,
+                        0
+                      )}{" "}
+                      unread
                     </div>
                   </div>
                 </div>
@@ -207,15 +251,25 @@ const MasterInbox = () => {
                 {emailAccounts.map((account) => (
                   <div
                     key={account.id}
-                    className={`account-item ${selectedAccount === account.id ? "account-item--active" : ""}`}
+                    className={`account-item ${
+                      selectedAccount === account.id
+                        ? "account-item--active"
+                        : ""
+                    }`}
                     onClick={() => setSelectedAccount(account.id)}
                   >
                     <div className="account-item__avatar">{account.avatar}</div>
                     <div className="account-item__info">
                       <div className="account-item__name">{account.email}</div>
-                      <div className="account-item__provider">{account.provider}</div>
+                      <div className="account-item__provider">
+                        {account.provider}
+                      </div>
                     </div>
-                    {account.unreadCount > 0 && <div className="account-item__badge">{account.unreadCount}</div>}
+                    {account.unreadCount > 0 && (
+                      <div className="account-item__badge">
+                        {account.unreadCount}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -260,16 +314,23 @@ const MasterInbox = () => {
                   <div className="empty-state">
                     <Mail size={48} />
                     <h3>No emails found</h3>
-                    <p>{viewMode === "unified" ? 
-                      "Your unified inbox is empty" : 
-                      "No emails in this folder"}
+                    <p>
+                      {viewMode === "unified"
+                        ? "Your unified inbox is empty"
+                        : "No emails in this folder"}
                     </p>
                   </div>
                 ) : (
                   filteredEmails.map((email) => (
                     <div
                       key={email.id}
-                      className={`email-item ${!email.isRead ? "email-item--unread" : ""} ${selectedEmail?.id === email.id ? "email-item--selected" : ""}`}
+                      className={`email-item ${
+                        !email.isRead ? "email-item--unread" : ""
+                      } ${
+                        selectedEmail?.id === email.id
+                          ? "email-item--selected"
+                          : ""
+                      }`}
                       onClick={() => setSelectedEmail(email)}
                     >
                       <div className="email-item__avatar">
@@ -281,16 +342,28 @@ const MasterInbox = () => {
                       <div className="email-item__content">
                         <div className="email-item__header">
                           <div className="email-item__from">
-                            <span className="email-item__name">{email.fromName}</span>
-                            <span className="email-item__email">{email.from}</span>
+                            <span className="email-item__name">
+                              {email.fromName}
+                            </span>
+                            <span className="email-item__email">
+                              {email.from}
+                            </span>
                           </div>
                           <div className="email-item__meta">
-                            {email.isStarred && <Star size={14} className="star-icon" />}
-                            <span className="email-item__time">{email.time}</span>
+                            {email.isStarred && (
+                              <Star size={14} className="star-icon" />
+                            )}
+                            <span className="email-item__time">
+                              {email.time}
+                            </span>
                           </div>
                         </div>
-                        <div className="email-item__subject">{email.subject}</div>
-                        <div className="email-item__preview">{email.preview}</div>
+                        <div className="email-item__subject">
+                          {email.subject}
+                        </div>
+                        <div className="email-item__preview">
+                          {email.preview}
+                        </div>
                         <div className="email-item__labels">
                           {email.labels.map((label) => (
                             <span key={label} className="email-label">
@@ -319,7 +392,9 @@ const MasterInbox = () => {
                       <span>
                         {selectedEmail.fromName} &lt;{selectedEmail.from}&gt;
                       </span>
-                      <span>to {getAccountById(selectedEmail.account)?.email}</span>
+                      <span>
+                        to {getAccountById(selectedEmail.account)?.email}
+                      </span>
                       <span>{selectedEmail.time}</span>
                     </div>
                   </div>
@@ -344,8 +419,10 @@ const MasterInbox = () => {
                   <p>Hi there,</p>
                   <p>{selectedEmail.preview}</p>
                   <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
+                    do eiusmod tempor incididunt ut labore et dolore magna
+                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+                    ullamco laboris.
                   </p>
                   <p>
                     Best regards,
@@ -374,11 +451,24 @@ const MasterInbox = () => {
       {/* Connect Email Modal */}
       {showConnectModal && (
         <div className="connect-modal">
-          <div className="connect-modal__backdrop" onClick={() => setShowConnectModal(false)} />
+          <div
+            className="connect-modal__backdrop"
+            onClick={() => setShowConnectModal(false)}
+          />
           <div className="connect-modal__content">
             <div className="connect-modal__header">
               <h3>Connect Your Email Account</h3>
-              <Button variant="ghost" onClick={() => setShowConnectModal(false)}>
+              <Button
+                variant="ghost"
+                onClick={() => setShowConnectModal(false)}
+                style={{
+                  fontSize: "24px", // Increase text size
+                  padding: "8px 16px", // Increase padding
+                  transition: "color 0.3s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "red")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "")}
+              >
                 ×
               </Button>
             </div>
@@ -386,7 +476,10 @@ const MasterInbox = () => {
               <div className="connect-options">
                 <div className="connect-option">
                   <div className="connect-option__icon">
-                    <img src="/placeholder.svg?height=40&width=40&text=G" alt="Google" />
+                    <img
+                      src="/placeholder.svg?height=40&width=40&text=G"
+                      alt="Google"
+                    />
                   </div>
                   <div className="connect-option__info">
                     <h4>Google / Gmail</h4>
@@ -397,7 +490,10 @@ const MasterInbox = () => {
 
                 <div className="connect-option">
                   <div className="connect-option__icon">
-                    <img src="/placeholder.svg?height=40&width=40&text=O" alt="Outlook" />
+                    <img
+                      src="/placeholder.svg?height=40&width=40&text=O"
+                      alt="Outlook"
+                    />
                   </div>
                   <div className="connect-option__info">
                     <h4>Microsoft Outlook</h4>
@@ -422,7 +518,7 @@ const MasterInbox = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default MasterInbox
+export default MasterInbox;
