@@ -45,6 +45,15 @@ body {
     color: $text-dark;
   }
 
+
+  span.new-to-text {
+  display: inline;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
   .signup-prompt {
     font-size: 16px;
     color: $text-medium;

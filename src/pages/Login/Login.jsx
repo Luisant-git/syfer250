@@ -36,7 +36,8 @@ const LoginPage = () => {
           <span className="logo-name">Syfer250</span>
         </div>
         <div className="signup-prompt">
-          <span>New to Syfer250? </span>
+          <span className="new-to-text">New to Syfer250? </span>
+
           <a href="/signup">Sign up</a>
         </div>
       </header>

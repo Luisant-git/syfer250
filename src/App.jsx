@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Layout from "./components/Layout/Layout"
 import LoginPage from "./pages/Login/Login"
-import SignupPage from "./pages/Login/Signup"
+// import SignupPage from "./pages/Login/Signup"
 import Dashboard from "./pages/Dashboard/Dashboard"
 // import Campaigns from "./pages/Campaigns/Campaigns"
 import NewCampaign from "./pages/NewCampaign/NewCampaign"
@@ -22,7 +22,7 @@ function App() {
       <Routes>
         {/* Login route WITHOUT layout */}
         <Route path="/login" element={<LoginPage />} />
-         <Route path="/signup" element={<SignupPage/>} />
+         {/* <Route path="/signup" element={<SignupPage/>} /> */}
 
 
         {/* All other routes WITH layout */}
