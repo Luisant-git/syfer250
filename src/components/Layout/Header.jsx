@@ -66,7 +66,7 @@ const Header = ({ toggleSidebar }) => {
 
   const goToLogout = () => {
     handleDropdownClose();
-    navigate("/logout");
+    navigate("/login");
   };
 
   return (

@@ -1,24 +1,24 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Outlet } from "react-router-dom"
 import Header from "./Header"
 import Sidebar from "./Sidebar"
 import "./Layout.scss"
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarVisible, setMobileSidebarVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth <= 768) // Adjust breakpoint as needed
+      setIsMobile(window.innerWidth <= 768)
     }
-    
+
     checkIfMobile()
-    window.addEventListener('resize', checkIfMobile)
-    
-    return () => window.removeEventListener('resize', checkIfMobile)
+    window.addEventListener("resize", checkIfMobile)
+    return () => window.removeEventListener("resize", checkIfMobile)
   }, [])
 
   const toggleSidebar = () => {
@@ -37,16 +37,20 @@ const Layout = ({ children }) => {
     <div className="layout">
       <Header toggleSidebar={toggleSidebar} />
       <div className="layout__container">
-        <Sidebar 
-          collapsed={sidebarCollapsed} 
+        <Sidebar
+          collapsed={sidebarCollapsed}
           mobileVisible={mobileSidebarVisible}
           onClose={closeMobileSidebar}
         />
         {mobileSidebarVisible && (
           <div className="sidebar-backdrop" onClick={closeMobileSidebar} />
         )}
-        <main className={`layout__main ${sidebarCollapsed ? "layout__main--collapsed" : ""}`}>
-          {children}
+        <main
+          className={`layout__main ${
+            sidebarCollapsed ? "layout__main--collapsed" : ""
+          }`}
+        >
+          <Outlet /> 
         </main>
       </div>
     </div>
