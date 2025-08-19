@@ -15,12 +15,8 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 .new-campaign {
   max-width: 10000px;
   margin: -30px auto;
-  background: $glass-bg;
-  border-radius: 1px;
-  backdrop-filter: blur($glass-blur);
   padding: 2.5rem 2rem 2rem 2rem;
   position: relative;
-  overflow: hidden;
 
   // Mobile adjustments (only changing spacing)
   @media (max-width: $breakpoint-md) {
@@ -30,26 +26,6 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   @media (max-width: $breakpoint-sm) {
     padding: 1.5rem 1rem;
     margin: -10px auto;
-  }
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: -80px; left: -80px;
-    width: 300px; height: 300px;
-    background: $gradient-primary;
-    opacity: 0.12;
-    border-radius: 50%;
-    z-index: 0;
-    pointer-events: none;
-
-    // Only scaling down for mobile
-    @media (max-width: $breakpoint-sm) {
-      top: -50px;
-      left: -50px;
-      width: 200px;
-      height: 200px;
-    }
   }
 
   &__header {
@@ -97,13 +73,9 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   &__content {
     margin-bottom: $spacing-xl;
     min-height: 500px;
-    background: rgba(255,255,255,0.85);
-    border-radius: $border-radius-md;
-    box-shadow: $shadow-md;
     padding: 2rem 1.5rem;
     position: relative;
     z-index: 1;
-    transition: box-shadow $transition-fast, background $transition-fast;
 
     @media (max-width: $breakpoint-sm) {
       padding: 1.5rem 1rem;
@@ -131,23 +103,7 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: 5px;
       font-weight: 600;
       font-size: 15px;
-      background: $gradient-primary;
-      color: #fff;
-      border: none;
-      box-shadow: 0 2px 8px rgba($primary-color, 0.10);
       cursor: pointer;
-      transition: background $transition-fast, box-shadow $transition-fast, transform $transition-fast;
-
-      &:hover, &:focus {
-        background: darken($primary-color, 5%);
-        box-shadow: 0 4px 16px rgba($primary-color, 0.18);
-        transform: translateY(-2px) scale(1.03);
-      }
-
-      &:active {
-        background: $secondary-color;
-        transform: scale(0.98);
-      }
 
       @media (max-width: $breakpoint-sm) {
         width: 100%;
@@ -177,9 +133,6 @@ $transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   justify-content: space-between;
   padding: $spacing-lg;
   overflow-x: auto;
-  background: rgba(255,255,255,0.6);
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-md;
   position: relative;
   z-index: 1;
   -webkit-overflow-scrolling: touch;
