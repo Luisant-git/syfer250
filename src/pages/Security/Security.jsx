@@ -342,7 +342,7 @@ const Security = () => {
         {/* Active Sessions */}
         <Card>
           <Card.Header>
-            <h2>
+             <h2 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Shield size={20} />
               Active Sessions
             </h2>
