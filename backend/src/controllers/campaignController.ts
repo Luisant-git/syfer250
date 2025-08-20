@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
+import { sendCampaignMails } from "../utils/sendCampaignMails";
 
 interface AuthRequest extends Request {
   user?: {
@@ -11,26 +12,23 @@ interface AuthRequest extends Request {
 export const createCampaign = async (req: AuthRequest, res: Response) => {
   try {
     const { name, subject, content, senderId, scheduledAt, recipients, scheduleType } = req.body;
-    
-    // Validate recipients array
+
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'At least one recipient is required' 
+      return res.status(400).json({
+        success: false,
+        error: "At least one recipient is required",
       });
     }
 
-    // Determine campaign status based on schedule type
-    let status: 'DRAFT' | 'SENT' | 'SCHEDULED' = 'DRAFT';
-    let finalScheduledAt = null;
-    
-    if (scheduleType === 'now') {
-      status = 'SENT';
-    } else if (scheduleType === 'later' && scheduledAt) {
-      status = 'SCHEDULED';
+    let status: "DRAFT" | "SENT" | "SCHEDULED" = "DRAFT";
+    let finalScheduledAt: Date | null = null;
+
+    if (scheduleType === "now") {
+      status = "SENT";
+    } else if (scheduleType === "later" && scheduledAt) {
+      status = "SCHEDULED";
       finalScheduledAt = new Date(scheduledAt);
     }
-    // scheduleType === 'draft' keeps status as 'DRAFT'
 
     const campaign = await prisma.campaign.create({
       data: {
@@ -38,24 +36,23 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
         subject,
         content,
         status,
-        senderId: senderId && senderId.trim() !== '' ? senderId : null,
+        senderId: senderId && senderId.trim() !== "" ? senderId : null,
         scheduledAt: finalScheduledAt,
-        sentAt: status === 'SENT' ? new Date() : null,
+        sentAt: status === "SENT" ? new Date() : null,
         userId: req.user!.id,
         recipients: {
           create: recipients.map((recipient: any) => ({
             email: recipient.email,
             firstName: recipient.firstName || null,
             lastName: recipient.lastName || null,
-            status: status === 'SENT' ? 'SENT' as const : 'PENDING' as const,
-            sentAt: status === 'SENT' ? new Date() : null
-          }))
-        }
+            status: status === "SENT" ? "SENT" : "PENDING",
+            sentAt: status === "SENT" ? new Date() : null,
+          })),
+        },
       },
-      include: { recipients: true, sender: true }
+      include: { recipients: true, sender: true },
     });
 
-    // Create analytics record
     await prisma.analytics.create({
       data: {
         campaignId: campaign.id,
@@ -65,16 +62,90 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
         totalBounced: 0,
         openRate: 0,
         clickRate: 0,
-        bounceRate: 0
-      }
+        bounceRate: 0,
+      },
     });
+
+    // 🚀 Send emails if "now"
+    if (status === "SENT") {
+      await sendCampaignMails(campaign);
+    }
 
     res.status(201).json({ success: true, data: campaign });
   } catch (error) {
-    console.error('Campaign creation error:', error);
-    res.status(500).json({ success: false, error: 'Failed to create campaign' });
+    console.error("Campaign creation error:", error);
+    res.status(500).json({ success: false, error: "Failed to create campaign" });
   }
 };
+
+
+// export const createCampaign = async (req: AuthRequest, res: Response) => {
+//   try {
+//     const { name, subject, content, senderId, scheduledAt, recipients, scheduleType } = req.body;
+    
+//     // Validate recipients array
+//     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+//       return res.status(400).json({ 
+//         success: false, 
+//         error: 'At least one recipient is required' 
+//       });
+//     }
+
+//     // Determine campaign status based on schedule type
+//     let status: 'DRAFT' | 'SENT' | 'SCHEDULED' = 'DRAFT';
+//     let finalScheduledAt = null;
+    
+//     if (scheduleType === 'now') {
+//       status = 'SENT';
+//     } else if (scheduleType === 'later' && scheduledAt) {
+//       status = 'SCHEDULED';
+//       finalScheduledAt = new Date(scheduledAt);
+//     }
+//     // scheduleType === 'draft' keeps status as 'DRAFT'
+
+//     const campaign = await prisma.campaign.create({
+//       data: {
+//         name,
+//         subject,
+//         content,
+//         status,
+//         senderId: senderId && senderId.trim() !== '' ? senderId : null,
+//         scheduledAt: finalScheduledAt,
+//         sentAt: status === 'SENT' ? new Date() : null,
+//         userId: req.user!.id,
+//         recipients: {
+//           create: recipients.map((recipient: any) => ({
+//             email: recipient.email,
+//             firstName: recipient.firstName || null,
+//             lastName: recipient.lastName || null,
+//             status: status === 'SENT' ? 'SENT' as const : 'PENDING' as const,
+//             sentAt: status === 'SENT' ? new Date() : null
+//           }))
+//         }
+//       },
+//       include: { recipients: true, sender: true }
+//     });
+
+//     // Create analytics record
+//     await prisma.analytics.create({
+//       data: {
+//         campaignId: campaign.id,
+//         totalSent: 0,
+//         totalOpened: 0,
+//         totalClicked: 0,
+//         totalBounced: 0,
+//         openRate: 0,
+//         clickRate: 0,
+//         bounceRate: 0
+//       }
+//     });
+
+//     res.status(201).json({ success: true, data: campaign });
+//   } catch (error) {
+//     console.error('Campaign creation error:', error);
+//     res.status(500).json({ success: false, error: 'Failed to create campaign' });
+//   }
+// };
 
 export const getCampaigns = async (req: AuthRequest, res: Response) => {
   try {
