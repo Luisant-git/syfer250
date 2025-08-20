@@ -1,65 +1,90 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Download, Filter, TrendingUp, Mail, MousePointer, Reply } from "lucide-react"
 import Card from "../../components/UI/Card/Card"
 import Button from "../../components/UI/Button/Button"
 import Table from "../../components/UI/Table/Table"
+import apiService from "../../services/api"
 import "./Reports.scss"
 
 const Reports = () => {
   const [dateRange, setDateRange] = useState("7d")
   const [showExportModal, setShowExportModal] = useState(false)
   const [selectedCampaign, setSelectedCampaign] = useState("all")
+  const [campaigns, setCampaigns] = useState([])
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const overallStats = [
-    { title: "Total Sent", value: "12,847", change: "+15.3%", icon: Mail, color: "primary" },
-    { title: "Open Rate", value: "24.8%", change: "+2.1%", icon: MousePointer, color: "success" },
-    { title: "Click Rate", value: "3.2%", change: "+0.8%", icon: TrendingUp, color: "info" },
-    { title: "Reply Rate", value: "1.9%", change: "+0.3%", icon: Reply, color: "warning" },
-  ]
+  useEffect(() => {
+    fetchReportsData();
+  }, []);
 
-  const campaignReports = [
-    {
-      id: 1,
-      campaign: "Q4 Product Launch",
-      sent: 2450,
-      delivered: 2398,
-      opened: 612,
-      clicked: 89,
-      replied: 23,
-      openRate: "25.5%",
-      clickRate: "3.7%",
-      replyRate: "0.9%",
-      status: "Active",
-    },
-    {
-      id: 2,
-      campaign: "Holiday Campaign",
-      sent: 1890,
-      delivered: 1856,
-      opened: 445,
-      clicked: 67,
-      replied: 18,
-      openRate: "24.0%",
-      clickRate: "3.6%",
-      replyRate: "1.0%",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      campaign: "New Year Outreach",
-      sent: 1245,
-      delivered: 1221,
-      opened: 289,
-      clicked: 34,
-      replied: 12,
-      openRate: "23.7%",
-      clickRate: "2.8%",
-      replyRate: "1.0%",
-      status: "Completed",
-    },
-  ]
+  const fetchReportsData = async () => {
+    try {
+      const [campaignsResponse, statsResponse] = await Promise.all([
+        apiService.getCampaigns(),
+        apiService.getDashboardStats()
+      ]);
+      
+      if (campaignsResponse.success) {
+        setCampaigns(campaignsResponse.data);
+      } else {
+        console.error('Failed to fetch campaigns:', campaignsResponse.error);
+        setCampaigns([]);
+      }
+      
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      } else {
+        console.error('Failed to fetch stats:', statsResponse.error);
+        // Set fallback stats
+        setStats({
+          totalCampaigns: 0,
+          sentCampaigns: 0,
+          totalRecipients: 0,
+          openRate: 0,
+          clickRate: 0,
+          bounceRate: 0
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch reports data:', error);
+      // Set fallback data
+      setCampaigns([]);
+      setStats({
+        totalCampaigns: 0,
+        sentCampaigns: 0,
+        totalRecipients: 0,
+        openRate: 0,
+        clickRate: 0,
+        bounceRate: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const overallStats = stats ? [
+    { title: "Total Sent", value: (stats.totalRecipients || 0).toLocaleString(), change: "+15.3%", icon: Mail, color: "primary" },
+    { title: "Open Rate", value: `${(stats.openRate || 0).toFixed(1)}%`, change: "+2.1%", icon: MousePointer, color: "success" },
+    { title: "Total Campaigns", value: (stats.totalCampaigns || 0).toString(), change: "+0.8%", icon: TrendingUp, color: "info" },
+    { title: "Sent Campaigns", value: (stats.sentCampaigns || 0).toString(), change: "+0.3%", icon: Reply, color: "warning" },
+  ] : []
+
+  const campaignReports = campaigns.map(campaign => ({
+    id: campaign.id,
+    campaign: campaign.name,
+    sent: campaign.analytics?.totalSent || 0,
+    delivered: campaign.analytics?.totalSent - campaign.analytics?.totalBounced || 0,
+    opened: campaign.analytics?.totalOpened || 0,
+    clicked: campaign.analytics?.totalClicked || 0,
+    replied: 0, // Not tracked in current schema
+    openRate: `${campaign.analytics?.openRate?.toFixed(1) || 0}%`,
+    clickRate: `${campaign.analytics?.clickRate?.toFixed(1) || 0}%`,
+    replyRate: "0%", // Not tracked in current schema
+    status: campaign.status,
+  }))
 
   const emailPerformance = [
     {
@@ -164,6 +189,17 @@ const Reports = () => {
         </div>
       </div>
     )
+  }
+
+  if (loading) {
+    return (
+      <div className="reports">
+        <div className="reports__header">
+          <h1>Reports & Analytics</h1>
+          <p>Loading analytics data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

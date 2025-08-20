@@ -2,23 +2,31 @@
 
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
-import ImportSettings from "./steps/ImportSettings"
+import ImportSettings from "./steps/ImportSettingsEnhanced"
 import EmailSequences from "./steps/EmailSequences"
 import SelectSender from "./steps/SelectSender"
 import ScheduleCampaign from "./steps/ScheduleCampaign"
 import CampaignSettings from "./steps/CampaignSettings"
+import apiService from "../../services/api"
+import useToast from "../../hooks/useToast"
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer"
 import "./NewCampaign.scss"
 
 const NewCampaign = () => {
+  const navigate = useNavigate()
+  const { toasts, removeToast, showSuccess, showError } = useToast()
   const [currentStep, setCurrentStep] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const [campaignData, setCampaignData] = useState({
-    importSettings: {},
-    emailSequences: [],
-    senderEmail: "",
-    schedule: {},
-    settings: {},
+    import: { recipients: [] },
+    sequences: [{ subject: "", content: "" }],
+    sender: "",
+    schedule: { scheduleType: "now", scheduledAt: null },
+    settings: { name: "", description: "" },
   })
 
   const steps = [
@@ -45,6 +53,63 @@ const NewCampaign = () => {
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const createCampaign = async () => {
+    setLoading(true)
+    setError("")
+    
+    try {
+      const { settings, sequences, sender, schedule, import: importData } = campaignData
+      
+      // Validate required data
+      if (!settings.name || !settings.name.trim()) {
+        throw new Error("Campaign name is required")
+      }
+      
+      if (!sequences[0]?.subject || !sequences[0]?.subject.trim()) {
+        throw new Error("Email subject is required")
+      }
+      
+      if (!sequences[0]?.content || !sequences[0]?.content.trim()) {
+        throw new Error("Email content is required")
+      }
+      
+      if (!importData.recipients || importData.recipients.length === 0) {
+        throw new Error("At least one recipient is required")
+      }
+      
+      const campaignPayload = {
+        name: settings.name.trim(),
+        subject: sequences[0].subject.trim(),
+        content: sequences[0].content.trim(),
+        senderId: sender && sender.trim() !== "" ? sender.trim() : null,
+        scheduledAt: schedule.scheduledAt || null,
+        scheduleType: schedule.scheduleType || 'draft',
+        recipients: importData.recipients.map(recipient => ({
+          email: recipient.email,
+          firstName: recipient.firstName || "",
+          lastName: recipient.lastName || ""
+        }))
+      }
+      
+      console.log("Creating campaign with payload:", campaignPayload)
+      
+      const response = await apiService.createCampaign(campaignPayload)
+      
+      if (response.success) {
+        showSuccess('Campaign created successfully! Redirecting to dashboard...')
+        setTimeout(() => navigate('/dashboard'), 1500)
+      } else {
+        throw new Error(response.error || 'Failed to create campaign')
+      }
+    } catch (error) {
+      console.error("Campaign creation error:", error)
+      setError(error.message || 'Failed to create campaign')
+      showError(error.message || 'Failed to create campaign')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -81,6 +146,19 @@ const NewCampaign = () => {
 
       {/* Step Content */}
       <Card className="new-campaign__content">
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '1rem',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            border: '1px solid #fcc'
+          }}>
+            {error}
+          </div>
+        )}
+        
         <CurrentStepComponent
           data={campaignData[steps[currentStep].id]}
           onUpdate={updateCampaignData}
@@ -100,8 +178,8 @@ const NewCampaign = () => {
         </div>
 
         {currentStep === steps.length - 1 ? (
-          <Button variant="success" size="large">
-            Start Campaign
+          <Button variant="success" size="large" onClick={createCampaign} disabled={loading}>
+            {loading ? 'Creating Campaign...' : 'Start Campaign'}
           </Button>
         ) : (
           <Button variant="primary" onClick={nextStep}>
@@ -110,6 +188,7 @@ const NewCampaign = () => {
           </Button>
         )}
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }

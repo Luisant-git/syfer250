@@ -1,9 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Shield, Key, Smartphone, Eye, EyeOff, AlertTriangle, Check, X } from "lucide-react"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
+import apiService from "../../services/api"
+import useToast from "../../hooks/useToast"
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer"
 import "./Security.scss"
 
 const Security = () => {
@@ -20,6 +23,24 @@ const Security = () => {
   const [otpCode, setOtpCode] = useState("")
   const [backupCodes, setBackupCodes] = useState([])
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState("Unknown Location")
+  const { toasts, removeToast, showSuccess, showError } = useToast()
+
+  useEffect(() => {
+    getCurrentLocation()
+  }, [])
+
+  const getCurrentLocation = async () => {
+    try {
+      const response = await fetch('https://ipapi.co/json/')
+      const data = await response.json()
+      if (data.city && data.region) {
+        setCurrentLocation(`${data.city}, ${data.region}`)
+      }
+    } catch (error) {
+      console.log('Could not get location:', error)
+    }
+  }
 
   const passwordRequirements = [
     { text: "At least 8 characters", met: newPassword.length >= 8 },
@@ -33,77 +54,62 @@ const Security = () => {
     {
       id: 1,
       device: "Chrome on Windows",
-      location: "New York, NY",
+      location: currentLocation,
       ip: "192.168.1.100",
       lastActive: "2 minutes ago",
       current: true,
-    },
-    {
-      id: 2,
-      device: "Safari on iPhone",
-      location: "New York, NY",
-      ip: "192.168.1.101",
-      lastActive: "1 hour ago",
-      current: false,
-    },
-    {
-      id: 3,
-      device: "Firefox on MacOS",
-      location: "Boston, MA",
-      ip: "10.0.0.50",
-      lastActive: "2 days ago",
-      current: false,
     },
   ]
 
   const loginHistory = [
     {
       id: 1,
-      timestamp: "2024-01-20 14:30:00",
-      device: "Chrome on Windows",
-      location: "New York, NY",
+      timestamp: new Date().toISOString(),
+      device: "Current Browser",
+      location: currentLocation,
       ip: "192.168.1.100",
       status: "success",
-    },
-    {
-      id: 2,
-      timestamp: "2024-01-20 09:15:00",
-      device: "Safari on iPhone",
-      location: "New York, NY",
-      ip: "192.168.1.101",
-      status: "success",
-    },
-    {
-      id: 3,
-      timestamp: "2024-01-19 18:45:00",
-      device: "Unknown Device",
-      location: "Unknown Location",
-      ip: "203.0.113.1",
-      status: "failed",
     },
   ]
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
-      alert("Passwords don't match")
+      showError("Passwords don't match")
       return
     }
 
     if (!passwordRequirements.every((req) => req.met)) {
-      alert("Password doesn't meet requirements")
+      showError("Password doesn't meet requirements")
+      return
+    }
+
+    if (!currentPassword.trim()) {
+      showError("Current password is required")
       return
     }
 
     setIsChangingPassword(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsChangingPassword(false)
-
-    // Reset form
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    alert("Password changed successfully")
+    try {
+      const response = await apiService.updatePassword({
+        currentPassword,
+        newPassword
+      })
+      
+      if (response.success) {
+        showSuccess("Password changed successfully")
+        // Reset form
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+      } else {
+        showError(response.error || "Failed to change password")
+      }
+    } catch (error) {
+      console.error('Password change error:', error)
+      showError(error.message || "Failed to change password")
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
   const handleTwoFactorSetup = () => {
@@ -482,6 +488,8 @@ const Security = () => {
           </Card.Body>
         </Card>
       </div>
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }

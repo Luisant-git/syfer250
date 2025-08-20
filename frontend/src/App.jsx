@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Layout from "./components/Layout/Layout"
 import LoginPage from "./pages/Login/Login"
-// import SignupPage from "./pages/Login/Signup"
+import SignupPage from "./pages/Login/Signup"
 import Dashboard from "./pages/Dashboard/Dashboard"
 // import Campaigns from "./pages/Campaigns/Campaigns"
 import NewCampaign from "./pages/NewCampaign/NewCampaign"
+import CampaignView from "./pages/Campaigns/CampaignView"
+import CampaignEdit from "./pages/Campaigns/CampaignEdit"
 // import Templates from "./pages/Templates/Templates"
 import MasterInbox from "./pages/MasterInbox/MasterInbox"
 import Report from "./pages/Analytics/Reports"
@@ -22,7 +24,7 @@ function App() {
       <Routes>
         {/* Login route WITHOUT layout */}
         <Route path="/login" element={<LoginPage />} />
-         {/* <Route path="/signup" element={<SignupPage/>} /> */}
+         <Route path="/signup" element={<SignupPage/>} />
 
 
         {/* All other routes WITH layout */}
@@ -31,6 +33,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           {/* <Route path="/campaigns" element={<Campaigns />} /> */}
           <Route path="/campaigns/new" element={<NewCampaign />} />
+          <Route path="/campaigns/:id" element={<CampaignView />} />
+          <Route path="/campaigns/:id/edit" element={<CampaignEdit />} />
           {/* <Route path="/templates" element={<Templates />} /> */}
           <Route path="/inbox" element={<MasterInbox />} />
           <Route path="/report" element={<Report />} />

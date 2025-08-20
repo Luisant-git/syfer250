@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Save,
   Bell,
@@ -9,10 +9,18 @@ import {
   Database,
   Palette,
   Globe,
+  Key,
+  Copy,
+  RefreshCw,
+  Check,
+  AlertCircle
 } from "lucide-react"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
 import Security from "../Security/Security"
+import apiService from "../../services/api"
+import useToast from "../../hooks/useToast"
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer"
 import "./Settings.scss"
 
 const Settings = () => {
@@ -48,8 +56,37 @@ const Settings = () => {
 
   const [activeTab, setActiveTab] = useState("general")
   const [isSaving, setIsSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [apiKeys, setApiKeys] = useState({
+    production: 'sk_prod_••••••••••••••••••••••••••••••••',
+    test: 'sk_test_••••••••••••••••••••••••••••••••'
+  })
+  const [copiedKey, setCopiedKey] = useState('')
+  const { toasts, removeToast, showSuccess, showError } = useToast()
 
-  // Remove types for plain JS!
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const response = await apiService.getUserProfile()
+      if (response.success) {
+        const userData = response.data
+        setSettings(prev => ({
+          ...prev,
+          timezone: userData.timezone || 'UTC',
+          // Map other user data to settings
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error)
+      showError('Failed to load settings')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSettingChange = (key, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -59,10 +96,57 @@ const Settings = () => {
 
   const handleSave = async () => {
     setIsSaving(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    // Show success message
+    try {
+      // Save user profile settings
+      const profileData = {
+        timezone: settings.timezone
+      }
+      
+      const response = await apiService.updateUserProfile(profileData)
+      if (response.success) {
+        showSuccess('Settings saved successfully!')
+      } else {
+        showError('Failed to save settings')
+      }
+    } catch (error) {
+      console.error('Save settings error:', error)
+      showError('Failed to save settings')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const generateApiKey = async (type) => {
+    try {
+      // Simulate API key generation
+      const newKey = `sk_${type}_${Math.random().toString(36).substring(2, 34)}`
+      setApiKeys(prev => ({ ...prev, [type]: newKey }))
+      showSuccess(`${type} API key regenerated successfully`)
+    } catch (error) {
+      showError('Failed to regenerate API key')
+    }
+  }
+
+  const copyToClipboard = async (text, keyType) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedKey(keyType)
+      showSuccess('API key copied to clipboard')
+      setTimeout(() => setCopiedKey(''), 2000)
+    } catch (error) {
+      showError('Failed to copy API key')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="settings" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }}></div>
+          <p>Loading settings...</p>
+        </div>
+      </div>
+    )
   }
 
   const tabs = [
@@ -367,34 +451,80 @@ const Settings = () => {
                 </div>
 
                 <div className="api-keys">
-                  <h3>API Keys</h3>
-                  <div className="api-key-item">
-                    <div className="api-key-info">
-                      <strong>Production Key</strong>
-                      <code>sk_prod_••••••••••••••••••••••••••••••••</code>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <Key size={20} />
+                    API Keys
+                  </h3>
+                  <div className="api-key-item" style={{ padding: '1rem', border: '1px solid #dee2e6', borderRadius: '8px', marginBottom: '1rem' }}>
+                    <div className="api-key-info" style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#dc3545' }}>Production Key</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <code style={{ flex: 1, padding: '0.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '0.9rem' }}>
+                          {apiKeys.production}
+                        </code>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <Button 
+                            variant="outline" 
+                            size="small" 
+                            onClick={() => generateApiKey('production')}
+                            title="Regenerate Key"
+                          >
+                            <RefreshCw size={14} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="small" 
+                            onClick={() => copyToClipboard(apiKeys.production, 'production')}
+                            title="Copy Key"
+                          >
+                            {copiedKey === 'production' ? <Check size={14} color="#28a745" /> : <Copy size={14} />}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="api-key-actions">
-                      <Button variant="outline" size="small">
-                        Regenerate
-                      </Button>
-                      <Button variant="ghost" size="small">
-                        Copy
-                      </Button>
-                    </div>
+                    <small style={{ color: '#666', fontSize: '0.8rem' }}>Use this key for production environments. Keep it secure!</small>
                   </div>
-                  <div className="api-key-item">
-                    <div className="api-key-info">
-                      <strong>Test Key</strong>
-                      <code>sk_test_••••••••••••••••••••••••••••••••</code>
+                  
+                  <div className="api-key-item" style={{ padding: '1rem', border: '1px solid #dee2e6', borderRadius: '8px' }}>
+                    <div className="api-key-info" style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#28a745' }}>Test Key</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <code style={{ flex: 1, padding: '0.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '0.9rem' }}>
+                          {apiKeys.test}
+                        </code>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <Button 
+                            variant="outline" 
+                            size="small" 
+                            onClick={() => generateApiKey('test')}
+                            title="Regenerate Key"
+                          >
+                            <RefreshCw size={14} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="small" 
+                            onClick={() => copyToClipboard(apiKeys.test, 'test')}
+                            title="Copy Key"
+                          >
+                            {copiedKey === 'test' ? <Check size={14} color="#28a745" /> : <Copy size={14} />}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="api-key-actions">
-                      <Button variant="outline" size="small">
-                        Regenerate
-                      </Button>
-                      <Button variant="ghost" size="small">
-                        Copy
-                      </Button>
+                    <small style={{ color: '#666', fontSize: '0.8rem' }}>Use this key for testing and development.</small>
+                  </div>
+                  
+                  <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <AlertCircle size={16} color="#856404" />
+                      <strong style={{ color: '#856404' }}>Important</strong>
                     </div>
+                    <ul style={{ margin: 0, paddingLeft: '1rem', color: '#856404', fontSize: '0.9rem' }}>
+                      <li>Store API keys securely and never expose them in client-side code</li>
+                      <li>Regenerate keys immediately if you suspect they've been compromised</li>
+                      <li>Use test keys for development and production keys for live campaigns</li>
+                    </ul>
                   </div>
                 </div>
               </Card.Body>
@@ -474,6 +604,127 @@ const Settings = () => {
           )}
         </div>
       </div>
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .api-key-item {
+          transition: all 0.2s ease;
+        }
+        
+        .api-key-item:hover {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .settings__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+        }
+        
+        .settings__layout {
+          display: grid;
+          grid-template-columns: 250px 1fr;
+          gap: 2rem;
+        }
+        
+        .settings-nav__item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: none;
+          background: none;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border-radius: 6px;
+          margin-bottom: 0.25rem;
+        }
+        
+        .settings-nav__item:hover {
+          background-color: #f8f9fa;
+        }
+        
+        .settings-nav__item--active {
+          background-color: #e3f2fd;
+          color: #1976d2;
+          font-weight: 500;
+        }
+        
+        .settings-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 1.5rem;
+        }
+        
+        .form-group {
+          margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+          color: #374151;
+        }
+        
+        .form-input, .form-select {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus, .form-select:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-help {
+          color: #6b7280;
+          font-size: 0.8rem;
+          margin-top: 0.25rem;
+        }
+        
+        .checkbox-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        
+        .checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+          width: 16px;
+          height: 16px;
+        }
+        
+        @media (max-width: 768px) {
+          .settings__layout {
+            grid-template-columns: 1fr;
+          }
+          
+          .settings-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   )
 }

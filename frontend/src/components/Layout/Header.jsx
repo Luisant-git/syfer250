@@ -2,11 +2,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Bell, User, Search, Settings, LogOut } from "lucide-react";
+import apiService from "../../services/api";
 import "./Header.scss";
 
 const Header = ({ toggleSidebar }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [notifications, setNotifications] = useState(0);
   const dropdownRef = useRef(null);
   const userButtonRef = useRef(null);
   const [closing, setClosing] = useState(false);
@@ -21,6 +25,33 @@ const Header = ({ toggleSidebar }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      // Fetch user profile
+      const userResponse = await apiService.getUserProfile();
+      if (userResponse.success) {
+        setUser(userResponse.data);
+      }
+      
+      // Fetch dashboard stats for credits/usage
+      const statsResponse = await apiService.getDashboardStats();
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
+      
+      // Set notifications count (mock for now)
+      setNotifications(3);
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      // Fallback to default user data
+      setUser({ email: 'user@example.com', firstName: 'User' });
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -66,7 +97,32 @@ const Header = ({ toggleSidebar }) => {
 
   const goToLogout = () => {
     handleDropdownClose();
+    // Clear user data and token
+    apiService.removeToken();
+    setUser(null);
     navigate("/login");
+  };
+
+  const getUserName = () => {
+    if (user?.firstName) {
+      return user.firstName;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  const getUserEmail = () => {
+    return user?.email || 'user@example.com';
+  };
+
+  const getActiveLeads = () => {
+    return stats?.totalRecipients || 0;
+  };
+
+  const getEmailCredits = () => {
+    return stats?.sentCampaigns || 0;
   };
 
   return (
@@ -90,7 +146,7 @@ const Header = ({ toggleSidebar }) => {
       <div className="header__right">
         <button className="header__notification">
           <Bell size={20} />
-          {!isMobile && <span className="header__notification-badge">3</span>}
+          {!isMobile && notifications > 0 && <span className="header__notification-badge">{notifications}</span>}
         </button>
         
         <button 
@@ -112,7 +168,7 @@ const Header = ({ toggleSidebar }) => {
           onMouseLeave={!isMobile ? handleMouseLeave : undefined}
         >
           <User size={20} />
-          {!isMobile && <span>Anesh</span>}
+          {!isMobile && <span>{getUserName()}</span>}
           {isUserDropdownOpen && (
             <div
               className={`user-dropdown ${closing ? "closing" : ""} ${isMobile ? "mobile" : ""}`}
@@ -125,9 +181,9 @@ const Header = ({ toggleSidebar }) => {
                   <User size={40} />
                 </div>
                 <div>
-                  <div className="user-dropdown__name">Anesh</div>
+                  <div className="user-dropdown__name">{getUserName()}</div>
                   <div className="user-dropdown__email">
-                    anesh@browsecontacts.com
+                    {getUserEmail()}
                   </div>
                 </div>
               </div>
@@ -137,18 +193,18 @@ const Header = ({ toggleSidebar }) => {
                 </div>
                 <div className="user-dropdown__progress">
                   <div className="user-dropdown__progress-label">
-                    Active Leads: 11/10,000
+                    Active Leads: {getActiveLeads()}/10,000
                   </div>
                   <div className="user-dropdown__progress-bar">
-                    <div style={{ width: "0.11%" }} />
+                    <div style={{ width: `${Math.min((getActiveLeads() / 10000) * 100, 100)}%` }} />
                   </div>
                 </div>
                 <div className="user-dropdown__progress">
                   <div className="user-dropdown__progress-label">
-                    Email Credits: 0/40,000
+                    Email Credits: {getEmailCredits()}/40,000
                   </div>
                   <div className="user-dropdown__progress-bar">
-                    <div style={{ width: "0%" }} />
+                    <div style={{ width: `${Math.min((getEmailCredits() / 40000) * 100, 100)}%` }} />
                   </div>
                 </div>
               </div>

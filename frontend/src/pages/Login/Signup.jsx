@@ -1,26 +1,56 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BsFillChatSquareDotsFill } from 'react-icons/bs';
 import { FaEyeSlash, FaEye } from 'react-icons/fa';
+import apiService from '../../services/api';
+import useToast from '../../hooks/useToast';
+import ToastContainer from '../../components/UI/ToastContainer/ToastContainer';
 import './Signup.scss';
 
 const SignUpPage = () => {
+  const navigate = useNavigate();
+  const { toasts, removeToast, showSuccess, showError } = useToast();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [companyUrl, setCompanyUrl] = useState('');
   const [source, setSource] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   useEffect(() => {
     setIsButtonDisabled(!(fullName && email && password && source));
   }, [fullName, email, password, source]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!isButtonDisabled) {
-      console.log('Creating account with:', { fullName, email, password, companyUrl, source });
-      alert(`Account for ${fullName} at ${companyUrl || 'their company'} created!`);
+    if (isButtonDisabled) return;
+    
+    setLoading(true);
+    setError('');
+
+    try {
+      const [firstName, ...lastNameParts] = fullName.split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      const response = await apiService.register({
+        email,
+        password,
+        firstName,
+        lastName
+      });
+      
+      if (response.success) {
+        showSuccess('Account created successfully! Welcome to Syfer250.');
+        setTimeout(() => navigate('/dashboard'), 1000);
+      }
+    } catch (error) {
+      setError(error.message || 'Registration failed');
+      showError(error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,6 +84,8 @@ const SignUpPage = () => {
           <p className="subtitle">Unlimited cold emailing at scale with AI Warmups</p>
 
           <form onSubmit={handleSubmit}>
+            {error && <div className="error-message">{error}</div>}
+            
             <div className="form-group">
               <label htmlFor="fullName">Full name</label>
               <input 
@@ -63,6 +95,7 @@ const SignUpPage = () => {
                 value={fullName} 
                 onChange={(e) => setFullName(e.target.value)} 
                 required 
+                disabled={loading}
               />
             </div>
             
@@ -127,13 +160,14 @@ const SignUpPage = () => {
             <button 
               type="submit" 
               className="create-button" 
-              disabled={isButtonDisabled}
+              disabled={isButtonDisabled || loading}
             >
-              Create Now
+              {loading ? 'Creating Account...' : 'Create Now'}
             </button>
           </form>
         </div>
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

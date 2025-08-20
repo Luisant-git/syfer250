@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -15,52 +15,19 @@ import {
 import Button from "../../components/UI/Button/Button";
 import Card from "../../components/UI/Card/Card";
 import Table from "../../components/UI/Table/Table";
+import apiService from "../../services/api";
+import useToast from "../../hooks/useToast";
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer";
 import "./GlobalBlockList.scss";
 
 const GlobalBlockList = () => {
-  const [blockedEmails, setBlockedEmails] = useState([
-    {
-      id: 1,
-      email: "spam@example.com",
-      reason: "Spam complaint",
-      dateAdded: "2024-01-15",
-      addedBy: "System",
-      source: "Automatic",
-    },
-    {
-      id: 2,
-      email: "bounce@domain.com",
-      reason: "Hard bounce",
-      dateAdded: "2024-01-14",
-      addedBy: "Anesh",
-      source: "Manual",
-    },
-    {
-      id: 3,
-      email: "unsubscribe@test.com",
-      reason: "Unsubscribe request",
-      dateAdded: "2024-01-13",
-      addedBy: "System",
-      source: "Automatic",
-    },
-    {
-      id: 4,
-      email: "invalid@nowhere.xyz",
-      reason: "Invalid email",
-      dateAdded: "2024-01-12",
-      addedBy: "Jane Smith",
-      source: "Manual",
-    },
-    {
-      id: 5,
-      email: "complaint@service.com",
-      reason: "Abuse complaint",
-      dateAdded: "2024-01-11",
-      addedBy: "System",
-      source: "Automatic",
-    },
-  ]);
-
+  const { toasts, removeToast, showSuccess, showError } = useToast();
+  const [blockedEmails, setBlockedEmails] = useState([]);
+  const [stats, setStats] = useState({
+    totalBlocked: 0,
+    autoBlocked: 0,
+    addedToday: 0
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSource, setFilterSource] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -69,68 +36,137 @@ const GlobalBlockList = () => {
   const [newReason, setNewReason] = useState("");
   const [bulkEmails, setBulkEmails] = useState("");
   const [selectedEmails, setSelectedEmails] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const filteredEmails = blockedEmails.filter((email) => {
-    const matchesSearch =
-      email.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.reason.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      filterSource === "all" ||
-      email.source.toLowerCase() === filterSource.toLowerCase();
-    return matchesSearch && matchesFilter;
-  });
+  useEffect(() => {
+    fetchBlockListData();
+  }, []);
 
-  const handleAddEmail = () => {
-    if (newEmail && newReason) {
-      const newBlockedEmail = {
-        id: Date.now(),
-        email: newEmail,
-        reason: newReason,
-        dateAdded: new Date().toISOString().split("T")[0],
-        addedBy: "Current User",
-        source: "Manual",
-      };
-      setBlockedEmails([...blockedEmails, newBlockedEmail]);
-      setNewEmail("");
-      setNewReason("");
-      setShowAddModal(false);
+  useEffect(() => {
+    fetchBlockList();
+  }, [searchQuery, filterSource]);
+
+  const fetchBlockListData = async () => {
+    try {
+      const [blockListResponse, statsResponse] = await Promise.all([
+        apiService.getBlockList(),
+        apiService.getBlockListStats()
+      ]);
+
+      if (blockListResponse.success) {
+        setBlockedEmails(blockListResponse.data);
+      }
+
+      if (statsResponse.success) {
+        setStats(statsResponse.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch block list data:', error);
+      showError('Failed to load block list data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleBulkAdd = () => {
-    if (bulkEmails) {
-      const emails = bulkEmails.split("\n").filter((email) => email.trim());
-      const newBlockedEmails = emails.map((email) => ({
-        id: Date.now() + Math.random(),
-        email: email.trim(),
-        reason: "Bulk import",
-        dateAdded: new Date().toISOString().split("T")[0],
-        addedBy: "Current User",
-        source: "Manual",
-      }));
-      setBlockedEmails([...blockedEmails, ...newBlockedEmails]);
-      setBulkEmails("");
-      setShowBulkModal(false);
+  const fetchBlockList = async () => {
+    try {
+      const response = await apiService.getBlockList(searchQuery, filterSource);
+      if (response.success) {
+        setBlockedEmails(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch block list:', error);
     }
   };
 
-  const handleRemoveEmail = (id) => {
-    if (
-      confirm("Are you sure you want to remove this email from the block list?")
-    ) {
-      setBlockedEmails(blockedEmails.filter((email) => email.id !== id));
+  const filteredEmails = blockedEmails;
+
+  const handleAddEmail = async () => {
+    if (!newEmail || !newReason) return;
+    
+    setActionLoading(true);
+    try {
+      const response = await apiService.addToBlockList(newEmail, newReason);
+      if (response.success) {
+        showSuccess('Email added to block list successfully');
+        setNewEmail("");
+        setNewReason("");
+        setShowAddModal(false);
+        fetchBlockListData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to add email:', error);
+      showError(error.message || 'Failed to add email to block list');
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleBulkRemove = () => {
-    if (
-      selectedEmails.length > 0 &&
-      confirm(`Remove ${selectedEmails.length} emails from the block list?`)
-    ) {
-      setBlockedEmails(
-        blockedEmails.filter((email) => !selectedEmails.includes(email.id))
-      );
-      setSelectedEmails([]);
+  const handleBulkAdd = async () => {
+    if (!bulkEmails.trim()) return;
+    
+    setActionLoading(true);
+    try {
+      const emails = bulkEmails.split("\n")
+        .map(email => email.trim())
+        .filter(email => email && email.includes('@'));
+      
+      if (emails.length === 0) {
+        showError('No valid email addresses found');
+        return;
+      }
+      
+      const response = await apiService.bulkAddToBlockList(emails);
+      if (response.success) {
+        const { added, skipped } = response.data;
+        showSuccess(`${added} emails added to block list${skipped > 0 ? `, ${skipped} skipped (already exists)` : ''}`);
+        setBulkEmails("");
+        setShowBulkModal(false);
+        fetchBlockListData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to bulk add emails:', error);
+      showError(error.message || 'Failed to bulk add emails');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveEmail = async (id) => {
+    if (!confirm("Are you sure you want to remove this email from the block list?")) {
+      return;
+    }
+    
+    try {
+      const response = await apiService.removeFromBlockList(id);
+      if (response.success) {
+        showSuccess('Email removed from block list');
+        fetchBlockListData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to remove email:', error);
+      showError('Failed to remove email from block list');
+    }
+  };
+
+  const handleBulkRemove = async () => {
+    if (selectedEmails.length === 0) return;
+    
+    if (!confirm(`Remove ${selectedEmails.length} emails from the block list?`)) {
+      return;
+    }
+    
+    try {
+      const response = await apiService.bulkRemoveFromBlockList(selectedEmails);
+      if (response.success) {
+        showSuccess(`${response.data.removed} emails removed from block list`);
+        setSelectedEmails([]);
+        fetchBlockListData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to bulk remove emails:', error);
+      showError('Failed to remove emails from block list');
     }
   };
 
@@ -200,7 +236,7 @@ const GlobalBlockList = () => {
                 <Ban size={24} />
               </div>
               <div className="stat-info">
-                <div className="stat-value">{blockedEmails.length}</div>
+                <div className="stat-value">{stats.totalBlocked}</div>
                 <div className="stat-label">Total Blocked</div>
               </div>
             </div>
@@ -214,9 +250,7 @@ const GlobalBlockList = () => {
                 <Mail size={24} />
               </div>
               <div className="stat-info">
-                <div className="stat-value">
-                  {blockedEmails.filter((e) => e.source === "Automatic").length}
-                </div>
+                <div className="stat-value">{stats.autoBlocked}</div>
                 <div className="stat-label">Auto-Blocked</div>
               </div>
             </div>
@@ -230,14 +264,7 @@ const GlobalBlockList = () => {
                 <Calendar size={24} />
               </div>
               <div className="stat-info">
-                <div className="stat-value">
-                  {
-                    blockedEmails.filter(
-                      (e) =>
-                        e.dateAdded === new Date().toISOString().split("T")[0]
-                    ).length
-                  }
-                </div>
+                <div className="stat-value">{stats.addedToday}</div>
                 <div className="stat-label">Added Today</div>
               </div>
             </div>
@@ -345,14 +372,14 @@ const GlobalBlockList = () => {
                     </Table.Cell>
                     <Table.Cell>{email.reason}</Table.Cell>
                     <Table.Cell>
-                      {new Date(email.dateAdded).toLocaleDateString()}
+                      {new Date(email.createdAt).toLocaleDateString()}
                     </Table.Cell>
-                    <Table.Cell>{email.addedBy}</Table.Cell>
+                    <Table.Cell>System</Table.Cell>
                     <Table.Cell>
                       <span
-                        className={`source-badge source-badge--${email.source.toLowerCase()}`}
+                        className={`source-badge source-badge--manual`}
                       >
-                        {email.source}
+                        Manual
                       </span>
                     </Table.Cell>
                     <Table.Cell>
@@ -425,9 +452,9 @@ const GlobalBlockList = () => {
               <Button
                 variant="primary"
                 onClick={handleAddEmail}
-                disabled={!newEmail || !newReason}
+                disabled={!newEmail || !newReason || actionLoading}
               >
-                Add to Block List
+                {actionLoading ? 'Adding...' : 'Add to Block List'}
               </Button>
             </div>
           </div>
@@ -472,14 +499,16 @@ const GlobalBlockList = () => {
               <Button
                 variant="primary"
                 onClick={handleBulkAdd}
-                disabled={!bulkEmails.trim()}
+                disabled={!bulkEmails.trim() || actionLoading}
               >
-                Import Emails
+                {actionLoading ? 'Importing...' : 'Import Emails'}
               </Button>
             </div>
           </div>
         </div>
       )}
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

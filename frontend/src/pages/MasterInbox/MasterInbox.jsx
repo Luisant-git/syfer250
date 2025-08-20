@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Mail,
@@ -15,151 +15,210 @@ import {
 } from "lucide-react";
 import Button from "../../components/UI/Button/Button";
 import Card from "../../components/UI/Card/Card";
+import apiService from "../../services/api";
+import useToast from "../../hooks/useToast";
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer";
 import "./MasterInbox.scss";
 
 const MasterInbox = () => {
-  // First declare emails array since other variables depend on it
-  const emails = [
-    {
-      id: 1,
-      from: "alice@example.com",
-      fromName: "Alice Johnson",
-      subject: "Re: Product Demo Request",
-      preview:
-        "Thank you for the demo. I have a few questions about the pricing...",
-      time: "2 hours ago",
-      isRead: false,
-      isStarred: true,
-      account: "gmail-1",
-      labels: ["Important", "Follow-up"],
-      folder: "inbox",
-    },
-    {
-      id: 2,
-      from: "bob@startup.com",
-      fromName: "Bob Smith",
-      subject: "Partnership Opportunity",
-      preview:
-        "Hi there, I came across your company and would love to discuss...",
-      time: "4 hours ago",
-      isRead: true,
-      isStarred: false,
-      account: "outlook-1",
-      labels: ["Business"],
-      folder: "inbox",
-    },
-    {
-      id: 3,
-      from: "sarah@techcorp.com",
-      fromName: "Sarah Wilson",
-      subject: "Meeting Follow-up",
-      preview: "Great meeting today! As discussed, here are the next steps...",
-      time: "1 day ago",
-      isRead: false,
-      isStarred: false,
-      account: "gmail-1",
-      labels: ["Meeting"],
-      folder: "important",
-    },
-    {
-      id: 4,
-      from: "mike@agency.com",
-      fromName: "Mike Davis",
-      subject: "Campaign Results",
-      preview:
-        "The latest campaign performed exceptionally well. Here are the metrics...",
-      time: "2 days ago",
-      isRead: true,
-      isStarred: true,
-      account: "smtp-1",
-      labels: ["Reports"],
-      folder: "archived",
-    },
-  ];
-
-  // Then declare folders which uses emails
-  const folders = [
-    {
-      id: "inbox",
-      name: "Inbox",
-      icon: <Mail size={16} />,
-      count: emails.filter((e) => e.folder === "inbox").length,
-    },
-    {
-      id: "unused",
-      name: "Unused Regions",
-      icon: <Mail size={16} />,
-      count: 0,
-    },
-    {
-      id: "important",
-      name: "Important",
-      icon: <Star size={16} />,
-      count: emails.filter((e) => e.folder === "important").length,
-    },
-    { id: "snoozed", name: "Snoozed", icon: <Mail size={16} />, count: 0 },
-    { id: "reminders", name: "Reminders", icon: <Mail size={16} />, count: 0 },
-    { id: "scheduled", name: "Scheduled", icon: <Mail size={16} />, count: 0 },
-    {
-      id: "archived",
-      name: "Archived",
-      icon: <Archive size={16} />,
-      count: emails.filter((e) => e.folder === "archived").length,
-    },
-  ];
-
-  // Then declare emailAccounts which also uses emails
-  const emailAccounts = [
-    {
-      id: "gmail-1",
-      email: "john@company.com",
-      provider: "Gmail",
-      status: "connected",
-      unreadCount: emails.filter((e) => e.account === "gmail-1" && !e.isRead)
-        .length,
-      avatar: "JD",
-    },
-    {
-      id: "outlook-1",
-      email: "marketing@company.com",
-      provider: "Outlook",
-      status: "connected",
-      unreadCount: emails.filter((e) => e.account === "outlook-1" && !e.isRead)
-        .length,
-      avatar: "MC",
-    },
-    {
-      id: "smtp-1",
-      email: "support@company.com",
-      provider: "SMTP",
-      status: "connected",
-      unreadCount: emails.filter((e) => e.account === "smtp-1" && !e.isRead)
-        .length,
-      avatar: "SC",
-    },
-  ];
-
-  // State declarations
+  const { toasts, removeToast, showSuccess, showError } = useToast();
+  const [emails, setEmails] = useState([]);
+  const [emailAccounts, setEmailAccounts] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [emailLoading, setEmailLoading] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState("all");
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [viewMode, setViewMode] = useState("unified"); // 'unified' or 'separate'
+  const [viewMode, setViewMode] = useState("unified");
   const [activeFolder, setActiveFolder] = useState("inbox");
-
-  const filteredEmails = emails.filter((email) => {
-    const matchesAccount =
-      selectedAccount === "all" || email.account === selectedAccount;
-    const matchesSearch =
-      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.fromName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.preview.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFolder =
-      activeFolder === "inbox" || email.folder === activeFolder;
-    return matchesAccount && matchesSearch && matchesFolder;
+  const [newAccountEmail, setNewAccountEmail] = useState("");
+  const [newAccountProvider, setNewAccountProvider] = useState("Gmail");
+  const [showSMTPModal, setShowSMTPModal] = useState(false);
+  const [smtpConfig, setSMTPConfig] = useState({
+    email: '',
+    host: '',
+    port: 587,
+    username: '',
+    password: '',
+    secure: false
   });
 
+  useEffect(() => {
+    fetchInboxData();
+  }, []);
+
+  useEffect(() => {
+    fetchEmails();
+  }, [selectedAccount, activeFolder, searchQuery]);
+
+  const fetchInboxData = async () => {
+    try {
+      const [accountsResponse, foldersResponse] = await Promise.all([
+        apiService.getEmailAccounts(),
+        apiService.getFolders()
+      ]);
+
+      if (accountsResponse.success) {
+        setEmailAccounts(accountsResponse.data);
+      }
+
+      if (foldersResponse.success) {
+        setFolders(foldersResponse.data.map(folder => ({
+          ...folder,
+          icon: <Mail size={16} />
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch inbox data:', error);
+      showError('Failed to load inbox data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchEmails = async () => {
+    setEmailLoading(true);
+    try {
+      const params = {
+        accountId: selectedAccount,
+        folder: activeFolder,
+        search: searchQuery,
+        limit: 50
+      };
+
+      const response = await apiService.getEmails(params);
+      if (response.success) {
+        setEmails(response.data.emails.map(email => ({
+          ...email,
+          time: formatTime(email.receivedAt),
+          account: email.emailAccountId,
+          labels: email.labels || []
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch emails:', error);
+      showError('Failed to load emails');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 1) return '1 day ago';
+    return `${diffDays} days ago`;
+  };
+
+  const handleAddEmailAccount = async () => {
+    if (!newAccountEmail) {
+      showError('Email address is required');
+      return;
+    }
+
+    try {
+      const response = await apiService.addEmailAccount(newAccountEmail, newAccountProvider);
+      if (response.success) {
+        showSuccess('Email account connected successfully');
+        setNewAccountEmail('');
+        setShowConnectModal(false);
+        fetchInboxData();
+        
+        // Sync emails for new account
+        await apiService.syncEmails(response.data.id);
+        fetchEmails();
+      }
+    } catch (error) {
+      console.error('Failed to add email account:', error);
+      showError(error.message || 'Failed to connect email account');
+    }
+  };
+
+  const handleEmailClick = async (email) => {
+    setSelectedEmail(email);
+    
+    // Mark as read if not already
+    if (!email.isRead) {
+      try {
+        await apiService.updateEmail(email.id, { isRead: true });
+        setEmails(emails.map(e => 
+          e.id === email.id ? { ...e, isRead: true } : e
+        ));
+      } catch (error) {
+        console.error('Failed to mark email as read:', error);
+      }
+    }
+  };
+
+  const handleStarEmail = async (emailId, isStarred) => {
+    try {
+      await apiService.updateEmail(emailId, { isStarred: !isStarred });
+      setEmails(emails.map(e => 
+        e.id === emailId ? { ...e, isStarred: !isStarred } : e
+      ));
+      showSuccess(isStarred ? 'Email unstarred' : 'Email starred');
+    } catch (error) {
+      console.error('Failed to update email:', error);
+      showError('Failed to update email');
+    }
+  };
+
+  const handleArchiveEmail = async (emailId) => {
+    try {
+      await apiService.updateEmail(emailId, { folder: 'archived' });
+      setEmails(emails.filter(e => e.id !== emailId));
+      setSelectedEmail(null);
+      showSuccess('Email archived');
+    } catch (error) {
+      console.error('Failed to archive email:', error);
+      showError('Failed to archive email');
+    }
+  };
+
+  const handleDeleteEmail = async (emailId) => {
+    if (!confirm('Are you sure you want to delete this email?')) return;
+    
+    try {
+      await apiService.deleteEmails([emailId]);
+      setEmails(emails.filter(e => e.id !== emailId));
+      setSelectedEmail(null);
+      showSuccess('Email deleted');
+    } catch (error) {
+      console.error('Failed to delete email:', error);
+      showError('Failed to delete email');
+    }
+  };
+
   const getAccountById = (id) => emailAccounts.find((acc) => acc.id === id);
+
+  const getTotalUnreadCount = () => {
+    return emailAccounts.reduce((sum, acc) => sum + (acc.unreadCount || 0), 0);
+  };
+
+  if (loading) {
+    return (
+      <div className="master-inbox">
+        <div className="inbox-header">
+          <h1>Master Inbox</h1>
+        </div>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          Loading inbox data...
+        </div>
+      </div>
+    );
+  }
+
+  const filteredEmails = emails;
+
+
 
   return (
     <div className="master-inbox">
@@ -485,9 +544,16 @@ const MasterInbox = () => {
                   </div>
                   <div className="connect-option__info">
                     <h4>Google / Gmail</h4>
-                    <p>Connect your Gmail account with OAuth</p>
+                    <p>Connect your Gmail account</p>
+                    <input
+                      type="email"
+                      placeholder="Enter Gmail address"
+                      value={newAccountEmail}
+                      onChange={(e) => setNewAccountEmail(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
                   </div>
-                  <Button variant="primary">Connect</Button>
+                  <Button variant="primary" onClick={() => { setNewAccountProvider('Gmail'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
                 </div>
 
                 <div className="connect-option">
@@ -501,9 +567,16 @@ const MasterInbox = () => {
                   </div>
                   <div className="connect-option__info">
                     <h4>Microsoft Outlook</h4>
-                    <p>Connect your Outlook account with OAuth</p>
+                    <p>Connect your Outlook account</p>
+                    <input
+                      type="email"
+                      placeholder="Enter Outlook address"
+                      value={newAccountEmail}
+                      onChange={(e) => setNewAccountEmail(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', marginTop: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
                   </div>
-                  <Button variant="primary">Connect</Button>
+                  <Button variant="primary" onClick={() => { setNewAccountProvider('Outlook'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
                 </div>
 
                 <div className="connect-option">
@@ -518,13 +591,92 @@ const MasterInbox = () => {
                     <h4>SMTP Server</h4>
                     <p>Connect using SMTP configuration</p>
                   </div>
-                  <Button variant="outline">Configure</Button>
+                  <Button variant="outline" onClick={() => { setShowConnectModal(false); setShowSMTPModal(true); }}>Configure</Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
+      
+      {/* SMTP Configuration Modal */}
+      {showSMTPModal && (
+        <div className="connect-modal">
+          <div className="connect-modal__backdrop" onClick={() => setShowSMTPModal(false)} />
+          <div className="connect-modal__content">
+            <div className="connect-modal__header">
+              <h3>Configure SMTP Server</h3>
+              <Button variant="ghost" onClick={() => setShowSMTPModal(false)} style={{ fontSize: "24px", padding: "8px 16px" }}>×</Button>
+            </div>
+            <div className="connect-modal__body">
+              <div className="smtp-form">
+                <div className="form-group">
+                  <label>Email Address *</label>
+                  <input type="email" value={smtpConfig.email} onChange={(e) => setSMTPConfig({...smtpConfig, email: e.target.value})} placeholder="your@email.com" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '1rem' }} />
+                </div>
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="form-group">
+                    <label>SMTP Host *</label>
+                    <input type="text" value={smtpConfig.host} onChange={(e) => setSMTPConfig({...smtpConfig, host: e.target.value})} placeholder="smtp.gmail.com" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                  </div>
+                  <div className="form-group">
+                    <label>Port *</label>
+                    <input type="number" value={smtpConfig.port} onChange={(e) => setSMTPConfig({...smtpConfig, port: parseInt(e.target.value)})} placeholder="587" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Username *</label>
+                  <input type="text" value={smtpConfig.username} onChange={(e) => setSMTPConfig({...smtpConfig, username: e.target.value})} placeholder="Usually your email address" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '1rem' }} />
+                </div>
+                <div className="form-group">
+                  <label>Password *</label>
+                  <input type="password" value={smtpConfig.password} onChange={(e) => setSMTPConfig({...smtpConfig, password: e.target.value})} placeholder="Your email password or app password" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '1rem' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input type="checkbox" checked={smtpConfig.secure} onChange={(e) => setSMTPConfig({...smtpConfig, secure: e.target.checked})} />
+                    Use SSL/TLS (recommended for port 465)
+                  </label>
+                </div>
+                <div className="smtp-presets" style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#666' }}>Common Settings:</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', fontSize: '0.8rem' }}>
+                    <div><strong>Gmail:</strong> smtp.gmail.com:587</div>
+                    <div><strong>Outlook:</strong> smtp-mail.outlook.com:587</div>
+                    <div><strong>Yahoo:</strong> smtp.mail.yahoo.com:587</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="connect-modal__footer">
+              <Button variant="outline" onClick={() => setShowSMTPModal(false)} style={{ padding: '24px 24px', backgroundColor: '#f8f9fa' }}>Cancel</Button>
+              <Button variant="primary" onClick={async () => {
+                if (!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password) {
+                  showError('All SMTP fields are required');
+                  return;
+                }
+                try {
+                  const response = await apiService.addEmailAccount(smtpConfig.email, 'SMTP', smtpConfig);
+                  if (response.success) {
+                    showSuccess('SMTP account connected successfully');
+                    setSMTPConfig({ email: '', host: '', port: 587, username: '', password: '', secure: false });
+                    setShowSMTPModal(false);
+                    fetchInboxData();
+                    await apiService.syncEmails(response.data.id);
+                    fetchEmails();
+                  }
+                } catch (error) {
+                  showError(error.message || 'Failed to connect SMTP account');
+                }
+              }} disabled={!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password}>
+                Connect SMTP
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

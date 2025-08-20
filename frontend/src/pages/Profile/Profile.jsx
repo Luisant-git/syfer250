@@ -1,30 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Save, Upload, User, Mail, Phone, MapPin, Building, Calendar } from "lucide-react"
 import Button from "../../components/UI/Button/Button"
 import Card from "../../components/UI/Card/Card"
+import apiService from "../../services/api"
+import useToast from "../../hooks/useToast"
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer"
 import "./Profile.scss"
 
 const Profile = () => {
+  const { toasts, removeToast, showSuccess, showError } = useToast()
   const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@company.com",
-    phone: "+1 (555) 123-4567",
-    company: "Acme Corporation",
-    jobTitle: "Marketing Director",
-    department: "Marketing",
-    location: "New York, NY",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    jobTitle: "",
+    department: "",
+    location: "",
     timezone: "America/New_York",
-    bio: "Experienced marketing professional with over 8 years in email marketing and campaign management.",
-    website: "https://johndoe.com",
-    linkedin: "https://linkedin.com/in/johndoe",
-    twitter: "@johndoe",
+    bio: "",
+    website: "",
+    linkedin: "",
+    twitter: "",
   })
 
+  const [stats, setStats] = useState(null)
   const [avatar, setAvatar] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [memberSince, setMemberSince] = useState("")
 
   const handleInputChange = (field, value) => {
     setProfile((prev) => ({
@@ -44,16 +51,99 @@ const Profile = () => {
     }
   }
 
+  useEffect(() => {
+    fetchProfileData()
+  }, [])
+
+  const fetchProfileData = async () => {
+    try {
+      const [profileResponse, statsResponse] = await Promise.all([
+        apiService.getUserProfile(),
+        apiService.getDashboardStats()
+      ])
+
+      if (profileResponse.success) {
+        const userData = profileResponse.data
+        setProfile({
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          company: userData.company || "",
+          jobTitle: userData.jobTitle || "",
+          department: userData.department || "",
+          location: userData.location || "",
+          timezone: userData.timezone || "America/New_York",
+          bio: userData.bio || "",
+          website: userData.website || "",
+          linkedin: userData.linkedin || "",
+          twitter: userData.twitter || "",
+        })
+        setMemberSince(new Date(userData.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long'
+        }))
+      }
+
+      if (statsResponse.success) {
+        setStats(statsResponse.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile data:', error)
+      showError('Failed to load profile data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSave = async () => {
     setIsSaving(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    // Show success message
+    try {
+      const response = await apiService.updateUserProfile({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+        company: profile.company,
+        jobTitle: profile.jobTitle,
+        department: profile.department,
+        location: profile.location,
+        timezone: profile.timezone,
+        bio: profile.bio,
+        website: profile.website,
+        linkedin: profile.linkedin,
+        twitter: profile.twitter
+      })
+
+      if (response.success) {
+        showSuccess('Profile updated successfully!')
+      } else {
+        showError('Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      showError('Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getInitials = () => {
-    return `${profile.firstName[0]}${profile.lastName[0]}`
+    const first = profile.firstName || 'U'
+    const last = profile.lastName || 'S'
+    return `${first[0]}${last[0]}`
+  }
+
+  if (loading) {
+    return (
+      <div className="profile">
+        <div className="profile__header">
+          <h1>Profile Settings</h1>
+        </div>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          Loading profile data...
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -116,7 +206,7 @@ const Profile = () => {
                   </div>
                   <div className="detail-item">
                     <Calendar size={16} />
-                    <span>Member since January 2024</span>
+                    <span>Member since {memberSince || 'Recently'}</span>
                   </div>
                 </div>
               </div>
@@ -307,19 +397,19 @@ const Profile = () => {
             <Card.Body>
               <div className="stats-grid">
                 <div className="stat-item">
-                  <div className="stat-item__value">24</div>
+                  <div className="stat-item__value">{stats?.totalCampaigns || 0}</div>
                   <div className="stat-item__label">Campaigns Created</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-item__value">12,847</div>
+                  <div className="stat-item__value">{stats?.totalSent?.toLocaleString() || 0}</div>
                   <div className="stat-item__label">Emails Sent</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-item__value">68.5%</div>
+                  <div className="stat-item__value">{stats?.openRate?.toFixed(1) || 0}%</div>
                   <div className="stat-item__label">Avg. Open Rate</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-item__value">1,247</div>
+                  <div className="stat-item__value">{stats?.totalRecipients?.toLocaleString() || 0}</div>
                   <div className="stat-item__label">Total Contacts</div>
                 </div>
               </div>
@@ -327,6 +417,7 @@ const Profile = () => {
           </Card>
         </div>
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   )
 }

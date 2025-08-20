@@ -4,28 +4,43 @@ import { useNavigate } from "react-router-dom";
 
 import { BsFillChatSquareDotsFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import apiService from "../../services/api";
+import useToast from "../../hooks/useToast";
+import ToastContainer from "../../components/UI/ToastContainer/ToastContainer";
 
 import "./Login.scss";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { toasts, removeToast, showSuccess, showError } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // You can add real authentication here
-    console.log("Login attempt with:", { email, password });
-    alert(`Signing in as ${email}`);
+    setLoading(true);
+    setError("");
 
-    // Navigate to dashboard after login
-    navigate("/dashboard");
+    try {
+      const response = await apiService.login(email, password);
+      if (response.success) {
+        showSuccess("Login successful! Welcome back.");
+        setTimeout(() => navigate("/dashboard"), 1000);
+      }
+    } catch (error) {
+      setError(error.message || "Login failed");
+      showError(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,6 +66,8 @@ const LoginPage = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="login-form">
+            {error && <div className="error-message">{error}</div>}
+            
             <div className="input-group">
               <label htmlFor="email" className="input-label">
                 Email Address
@@ -62,6 +79,7 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -80,6 +98,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
               />
               <span
                 className="password-toggle-icon"
@@ -99,12 +118,13 @@ const LoginPage = () => {
               Forgot Password?
             </a>
 
-            <button type="submit" className="login-button">
-              Login
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
         </div>
       </main>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };
