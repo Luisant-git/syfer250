@@ -37,7 +37,7 @@ model Campaign {
   name        String
   subject     String
   content     String
-  status      CampaignStatus @default(DRAFT)
+  status      CampaignStatus @default(SENT)
   scheduledAt DateTime?
   sentAt      DateTime?
   userId      String
@@ -54,6 +54,9 @@ model Sender {
   id        String     @id @default(cuid())
   name      String
   email     String
+  password  String?
+  host      String?
+  port      Int?
   isVerified Boolean   @default(false)
   userId    String
   createdAt DateTime   @default(now())
@@ -69,7 +72,7 @@ model Recipient {
   lastName   String?
   company    String?
   phone      String?
-  status     RecipientStatus @default(PENDING)
+  status     RecipientStatus @default(SENT)
   campaignId String
   sentAt     DateTime?
   openedAt   DateTime?
@@ -154,4 +157,5 @@ enum RecipientStatus {
   CLICKED
   BOUNCED
   UNSUBSCRIBED
+  FAILED
 }

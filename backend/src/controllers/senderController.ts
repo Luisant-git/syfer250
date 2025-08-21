@@ -10,12 +10,15 @@ interface AuthRequest extends Request {
 
 export const createSender = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, password, host, port } = req.body;
     
     const sender = await prisma.sender.create({
       data: {
         name,
         email,
+        password,
+        host,
+        port,
         userId: req.user!.id
       }
     });
