@@ -259,6 +259,32 @@ class ApiService {
       method: 'POST',
     });
   }
+
+  // Field Mapping methods
+  async validateCSVData(csvData, fieldMapping) {
+    return this.request('/campaigns/validate-csv', {
+      method: 'POST',
+      body: { csvData, fieldMapping },
+    });
+  }
+
+  async processCSVImport(csvData, fieldMapping, campaignId = null) {
+    return this.request('/campaigns/import-csv', {
+      method: 'POST',
+      body: { csvData, fieldMapping, campaignId },
+    });
+  }
+
+  async getFieldMappingTemplates() {
+    return this.request('/campaigns/field-mapping-templates');
+  }
+
+  async saveFieldMappingTemplate(name, mapping) {
+    return this.request('/campaigns/field-mapping-templates', {
+      method: 'POST',
+      body: { name, mapping },
+    });
+  }
 }
 
 export default new ApiService();
