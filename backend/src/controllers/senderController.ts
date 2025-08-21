@@ -10,7 +10,7 @@ interface AuthRequest extends Request {
 
 export const createSender = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, email, password, host, port } = req.body;
+    const { name, email, password, host, port, isVerified } = req.body;
     
     const sender = await prisma.sender.create({
       data: {
@@ -19,6 +19,7 @@ export const createSender = async (req: AuthRequest, res: Response) => {
         password,
         host,
         port,
+        isVerified,
         userId: req.user!.id
       }
     });

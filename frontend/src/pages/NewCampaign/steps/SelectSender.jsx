@@ -23,6 +23,8 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
     password: '',
     secure: false
   });
+  console.log("-----------VIEW-SMTP-----------",smtpConfig);
+  
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -673,9 +675,18 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                     return;
                   }
                   try {
-                    const response = await apiService.addEmailAccount(smtpConfig.email, 'SMTP', smtpConfig);
+                    const data = {
+                      name: smtpConfig.username,
+                      email: smtpConfig.email,
+                      password: smtpConfig.password,
+                      host: smtpConfig.host,
+                      port: smtpConfig.port,
+                      isVerified: smtpConfig.secure,
+                    }
+                    const response = await apiService.createSender(data);
                     if (response.success) {
                       showSuccess('SMTP account connected successfully');
+                      setSenders(prev => [...prev, response.data]);
                       setSMTPConfig({ email: '', host: '', port: 587, username: '', password: '', secure: false });
                       setShowSMTPModal(false);
                       fetchEmailAccounts();

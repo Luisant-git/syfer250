@@ -44,6 +44,10 @@ export const campaignSchemas = {
 export const senderSchemas = {
   create: Joi.object({
     name: Joi.string().required(),
-    email: Joi.string().email().required()
+    email: Joi.string().email().required(),
+    password: Joi.string().allow('', null).optional(),
+    host: Joi.string().allow('', null).optional(),
+    port: Joi.number().allow(null).optional(),
+    isVerified: Joi.boolean().optional()
   })
 };
