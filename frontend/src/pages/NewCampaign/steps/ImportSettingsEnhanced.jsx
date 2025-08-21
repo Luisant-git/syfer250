@@ -218,12 +218,14 @@ const ImportSettings = ({ data, onUpdate }) => {
 
   return (
     <div className="import-settings">
-      <h2>Import Recipients</h2>
-      <p>Add recipients manually or upload a CSV file with advanced validation</p>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ marginBottom: '0.5rem' }}>Import Recipients</h2>
+        <p style={{ margin: 0 }}>Add recipients manually or upload a CSV file with advanced validation</p>
+      </div>
 
       {/* Manual Add */}
-      <div className="manual-add" style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
-        <h3>Add Recipient Manually</h3>
+      <div className="manual-add" style={{ marginBottom: '2.5rem', padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+        <h3 style={{ marginBottom: '1rem' }}>Add Recipient Manually</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
           <div>
             <label>Email *</label>

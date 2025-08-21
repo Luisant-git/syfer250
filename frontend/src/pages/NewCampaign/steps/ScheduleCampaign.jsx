@@ -102,14 +102,16 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
 
   return (
     <div className="schedule-campaign">
-      <h2>Schedule Campaign</h2>
-      <p>Choose when to send your campaign</p>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ marginBottom: '0.5rem' }}>Schedule Campaign</h2>
+        <p style={{ margin: 0 }}>Choose when to send your campaign</p>
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', marginBottom: '2rem' }}>
         {/* Main Schedule Options */}
         <div>
           {/* Send Now */}
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer' }}>
               <input
                 type="radio"
@@ -128,7 +130,7 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
           </div>
 
           {/* Schedule for Later */}
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer' }}>
               <input
                 type="radio"
@@ -199,7 +201,7 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
           )}
 
           {/* Save as Draft */}
-          <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
             <label style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer' }}>
               <input
                 type="radio"

@@ -105,10 +105,10 @@ const CampaignSettings = ({ data, onUpdate, campaignData }) => {
 
   return (
     <div className="campaign-settings">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h2>Campaign Settings</h2>
-          <p>Final settings, validation, and campaign summary</p>
+          <h2 style={{ marginBottom: '0.5rem' }}>Campaign Settings</h2>
+          <p style={{ margin: 0 }}>Final settings, validation, and campaign summary</p>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '2rem', fontWeight: 'bold', color: readinessScore >= 80 ? '#28a745' : readinessScore >= 60 ? '#ffc107' : '#dc3545' }}>
@@ -121,8 +121,8 @@ const CampaignSettings = ({ data, onUpdate, campaignData }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2rem' }}>
         {/* Main Settings */}
         <div>
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '2.5rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Campaign Name *
               </label>
@@ -141,7 +141,7 @@ const CampaignSettings = ({ data, onUpdate, campaignData }) => {
               />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Description
               </label>
@@ -163,7 +163,7 @@ const CampaignSettings = ({ data, onUpdate, campaignData }) => {
             </div>
 
             {/* Tags */}
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Tags
               </label>
@@ -233,7 +233,7 @@ const CampaignSettings = ({ data, onUpdate, campaignData }) => {
             </div>
 
             {/* Priority */}
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                 Campaign Priority
               </label>

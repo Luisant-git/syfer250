@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail, Shield, AlertCircle, CheckCircle, Settings, User, Building } from 'lucide-react';
+import { Plus, Mail, Shield, AlertCircle, CheckCircle, Settings, User, Building, Edit, Trash2 } from 'lucide-react';
 import Button from '../../../components/UI/Button/Button';
 import apiService from '../../../services/api';
 import useToast from '../../../hooks/useToast';
@@ -7,7 +7,7 @@ import useToast from '../../../hooks/useToast';
 const SelectSender = ({ data, onUpdate, campaignData }) => {
   const { showSuccess, showError } = useToast();
   const [senders, setSenders] = useState([]);
-  const [emailAccounts, setEmailAccounts] = useState([]);
+
   const [selectedSender, setSelectedSender] = useState(data || '');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -27,6 +27,9 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
   
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingSender, setEditingSender] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [senderToDelete, setSenderToDelete] = useState(null);
 
   // Initialize data if not provided
   React.useEffect(() => {
@@ -37,7 +40,6 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
 
   useEffect(() => {
     fetchSenders();
-    fetchEmailAccounts();
   }, []);
 
   const fetchSenders = async () => {
@@ -51,16 +53,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
     }
   };
 
-  const fetchEmailAccounts = async () => {
-    try {
-      const response = await apiService.getEmailAccounts();
-      if (response.success) {
-        setEmailAccounts(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch email accounts:', error);
-    }
-  };
+
 
   const handleSenderSelect = (senderId) => {
     setSelectedSender(senderId);
@@ -112,12 +105,15 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
     }
 
     try {
-      const response = await apiService.addEmailAccount(newAccountEmail, newAccountProvider);
+      const response = await apiService.createSender({
+        name: newAccountEmail.split('@')[0],
+        email: newAccountEmail
+      });
       if (response.success) {
         showSuccess('Email account connected successfully');
         setNewAccountEmail('');
         setShowConnectModal(false);
-        fetchEmailAccounts();
+        fetchSenders();
       }
     } catch (error) {
       console.error('Failed to add email account:', error);
@@ -125,15 +121,83 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
     }
   };
 
+  const handleEditSender = (sender) => {
+    setEditingSender(sender);
+    setNewSender({
+      name: sender.name,
+      email: sender.email,
+      replyTo: sender.replyTo || '',
+      organization: sender.organization || '',
+      signature: sender.signature || ''
+    });
+    setShowAddForm(true);
+  };
+
+  const handleUpdateSender = async () => {
+    if (!newSender.name || !newSender.email) return;
+    
+    setLoading(true);
+    try {
+      const response = await apiService.updateSender(editingSender.id, newSender);
+      if (response.success) {
+        setSenders(senders.map(s => s.id === editingSender.id ? response.data : s));
+        showSuccess('Sender updated successfully');
+        setNewSender({ name: '', email: '', replyTo: '', organization: '', signature: '' });
+        setEditingSender(null);
+        setShowAddForm(false);
+      }
+    } catch (error) {
+      console.error('Failed to update sender:', error);
+      showError(error.message || 'Failed to update sender');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSender = async () => {
+    if (!senderToDelete) return;
+    
+    setLoading(true);
+    try {
+      await apiService.deleteSender(senderToDelete.id);
+      setSenders(senders.filter(s => s.id !== senderToDelete.id));
+      if (selectedSender === senderToDelete.id) {
+        setSelectedSender('');
+        onUpdate('');
+      }
+      showSuccess('Sender deleted successfully');
+      setShowDeleteModal(false);
+      setSenderToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete sender:', error);
+      showError(error.message || 'Failed to delete sender');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (sender) => {
+    setSenderToDelete(sender);
+    setShowDeleteModal(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingSender(null);
+    setNewSender({ name: '', email: '', replyTo: '', organization: '', signature: '' });
+    setShowAddForm(false);
+  };
+
   return (
     <div className="select-sender">
-      <h2>Select Sender</h2>
-      <p>Choose who the email will be sent from with advanced sender management</p>
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ marginBottom: '0.5rem' }}>Select Sender</h2>
+        <p style={{ margin: 0 }}>Choose who the email will be sent from with advanced sender management</p>
+      </div>
 
       {/* Sender Recommendation */}
       {recommendation && (
         <div style={{ 
-          marginBottom: '1rem', 
+          marginBottom: '2rem', 
           padding: '1rem', 
           backgroundColor: recommendation.type === 'warning' ? '#fff3cd' : '#d1ecf1', 
           border: `1px solid ${recommendation.type === 'warning' ? '#ffeaa7' : '#bee5eb'}`, 
@@ -156,7 +220,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
       )}
 
       {/* No Sender Option */}
-      <div style={{ marginBottom: '1rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -184,7 +248,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
 
       {/* Existing Senders */}
       {senders.map((sender) => (
-        <div key={sender.id} style={{ marginBottom: '1rem' }}>
+        <div key={sender.id} style={{ marginBottom: '1.5rem' }}>
           <label style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -243,215 +307,43 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                   {sender.organization}
                 </div>
               )}
-
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openDeleteModal(sender);
+                }}
+                style={{
+                  background: 'none',
+                  border: '1px solid #ef4444',
+                  color: '#ef4444',
+                  padding: '0.5rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Delete Sender"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           </label>
         </div>
       ))}
 
-      {/* Email Accounts Section */}
-      {emailAccounts.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ marginBottom: '1rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Mail size={20} />
-            Connected Email Accounts
-          </h3>
-          {emailAccounts.map((account) => (
-            <div key={account.id} style={{ marginBottom: '1rem' }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                padding: '1rem', 
-                border: '1px solid #ddd', 
-                borderRadius: '8px', 
-                cursor: 'pointer',
-                backgroundColor: selectedSender === account.id ? '#e3f2fd' : 'white'
-              }}>
-                <input
-                  type="radio"
-                  name="sender"
-                  value={account.id}
-                  checked={selectedSender === account.id}
-                  onChange={() => handleSenderSelect(account.id)}
-                  style={{ marginRight: '0.75rem' }}
-                />
-                <div className="connect-option__icon" style={{ marginRight: '0.75rem' }}>
-                  {account.provider === 'Gmail' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                  )}
-                  {account.provider === 'Outlook' && (
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/1200px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png" alt="Outlook" width="24" height="24" />
-                  )}
-                  {account.provider === 'SMTP' && (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                  )}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <strong>{account.email}</strong>
-                    <span style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.25rem',
-                      color: account.status === 'connected' ? '#28a745' : '#856404', 
-                      fontSize: '0.8rem',
-                      backgroundColor: account.status === 'connected' ? '#d4edda' : '#fff3cd',
-                      padding: '0.125rem 0.375rem',
-                      borderRadius: '12px'
-                    }}>
-                      {account.status === 'connected' ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-                      {account.status}
-                    </span>
-                  </div>
-                  <div style={{ color: '#666', fontSize: '0.9rem' }}>{account.provider} Account</div>
-                </div>
-              </label>
-            </div>
-          ))}
-        </div>
-      )}
+
 
       {/* Add New Sender */}
-      {!showAddForm ? (
-        <div style={{ textAlign: 'center', marginTop: '1rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <Button variant="primary" onClick={() => setShowConnectModal(true)}>
-            <Plus size={16} />
-            Connect Email Account
-          </Button>
-          <Button variant="outline" onClick={() => setShowAddForm(true)}>
-            <Plus size={16} />
-            Add Custom Sender
-          </Button>
-        </div>
-      ) : (
-        <div style={{ padding: '1.5rem', border: '1px solid #ddd', borderRadius: '8px', marginTop: '1rem', backgroundColor: '#f8f9fa' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Settings size={16} />
-              Add New Sender
-            </h4>
-            <button
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#667eea',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                textDecoration: 'underline'
-              }}
-            >
-              {showAdvanced ? 'Hide' : 'Show'} Advanced Options
-            </button>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: showAdvanced ? '1fr 1fr' : '1fr', gap: '1rem' }}>
-            <div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Sender Name *</label>
-                <input
-                  type="text"
-                  value={newSender.name}
-                  onChange={(e) => setNewSender({ ...newSender, name: e.target.value })}
-                  placeholder="John Doe"
-                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </div>
-              
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email Address *</label>
-                <input
-                  type="email"
-                  value={newSender.email}
-                  onChange={(e) => setNewSender({ ...newSender, email: e.target.value })}
-                  placeholder="john@company.com"
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.75rem', 
-                    border: `1px solid ${newSender.email && !validateEmail(newSender.email) ? '#dc3545' : '#ccc'}`, 
-                    borderRadius: '4px' 
-                  }}
-                />
-                {newSender.email && !validateEmail(newSender.email) && (
-                  <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.25rem' }}>Invalid email format</div>
-                )}
-              </div>
-            </div>
-            
-            {showAdvanced && (
-              <div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Reply-To Email</label>
-                  <input
-                    type="email"
-                    value={newSender.replyTo}
-                    onChange={(e) => setNewSender({ ...newSender, replyTo: e.target.value })}
-                    placeholder="replies@company.com (optional)"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </div>
-                
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Organization</label>
-                  <input
-                    type="text"
-                    value={newSender.organization}
-                    onChange={(e) => setNewSender({ ...newSender, organization: e.target.value })}
-                    placeholder="Company Name (optional)"
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {showAdvanced && (
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email Signature</label>
-              <textarea
-                value={newSender.signature}
-                onChange={(e) => setNewSender({ ...newSender, signature: e.target.value })}
-                placeholder="Best regards,\nJohn Doe\nCompany Name"
-                rows={3}
-                style={{ 
-                  width: '100%', 
-                  padding: '0.75rem', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
-          )}
-          
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button variant="outline" onClick={() => setShowAddForm(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={addNewSender} 
-              disabled={loading || !newSender.name || !newSender.email || (newSender.email && !validateEmail(newSender.email))}
-            >
-              {loading ? 'Adding...' : 'Add Sender'}
-            </Button>
-          </div>
-          
-          <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#d1ecf1', borderRadius: '4px', border: '1px solid #bee5eb' }}>
-            <div style={{ fontSize: '0.9rem', color: '#0c5460' }}>
-              <strong>💡 Tip:</strong> Verify your sender email address to improve deliverability and avoid spam filters.
-            </div>
-          </div>
-        </div>
-      )}
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <Button variant="primary" onClick={() => setShowConnectModal(true)}>
+          <Plus size={16} />
+          Connect Email Account
+        </Button>
+      </div>
       
       {/* Sender Performance Insights */}
       {selectedSender && selectedSender !== '' && (
@@ -689,7 +581,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                       setSenders(prev => [...prev, response.data]);
                       setSMTPConfig({ email: '', host: '', port: 587, username: '', password: '', secure: false });
                       setShowSMTPModal(false);
-                      fetchEmailAccounts();
+                      fetchSenders();
                     }
                   } catch (error) {
                     showError(error.message || 'Failed to connect SMTP account');
@@ -698,6 +590,70 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                 disabled={!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password}
               >
                 Connect SMTP
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ 
+                width: '60px', 
+                height: '60px', 
+                borderRadius: '50%', 
+                backgroundColor: '#fee2e2', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                margin: '0 auto 1rem' 
+              }}>
+                <Trash2 size={24} color="#ef4444" />
+              </div>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#1f2937' }}>Delete Sender</h3>
+              <p style={{ margin: 0, color: '#6b7280' }}>
+                Are you sure you want to delete <strong>{senderToDelete?.name}</strong>? This action cannot be undone.
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSenderToDelete(null);
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleDeleteSender}
+                disabled={loading}
+                style={{ backgroundColor: '#ef4444', borderColor: '#ef4444' }}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </div>
