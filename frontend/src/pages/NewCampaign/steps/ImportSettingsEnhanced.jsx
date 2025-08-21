@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Plus, X, FileText, Download, Search, Filter, Users, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Plus, X, FileText, Download, Search, Filter, Users, AlertCircle, CheckCircle, Settings } from 'lucide-react';
 import Button from '../../../components/UI/Button/Button';
 
 const ImportSettings = ({ data, onUpdate }) => {
@@ -12,6 +12,16 @@ const ImportSettings = ({ data, onUpdate }) => {
   const [selectedRecipients, setSelectedRecipients] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
+  const [showFieldMapping, setShowFieldMapping] = useState(false);
+  const [csvHeaders, setCsvHeaders] = useState([]);
+  const [fieldMapping, setFieldMapping] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    company: '',
+    phone: ''
+  });
+  const [csvData, setCsvData] = useState([]);
   const fileInputRef = useRef(null);
 
   const validateEmail = (email) => {
@@ -54,50 +64,68 @@ const ImportSettings = ({ data, onUpdate }) => {
     reader.onload = (e) => {
       const csv = e.target.result;
       const lines = csv.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const headers = lines[0].split(',').map(h => h.trim());
+      const dataRows = lines.slice(1).filter(line => line.trim());
       
-      const emailIndex = headers.findIndex(h => h.includes('email'));
-      const firstNameIndex = headers.findIndex(h => h.includes('first') || h.includes('fname'));
-      const lastNameIndex = headers.findIndex(h => h.includes('last') || h.includes('lname'));
-      const companyIndex = headers.findIndex(h => h.includes('company') || h.includes('organization'));
-      const phoneIndex = headers.findIndex(h => h.includes('phone') || h.includes('mobile'));
+      setCsvHeaders(headers);
+      setCsvData(dataRows);
       
-      const csvRecipients = lines.slice(1)
-        .filter(line => line.trim())
-        .map((line, index) => {
-          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-          const email = values[emailIndex] || '';
-          return {
-            id: Date.now() + index,
-            email: email,
-            firstName: values[firstNameIndex] || '',
-            lastName: values[lastNameIndex] || '',
-            company: values[companyIndex] || '',
-            phone: values[phoneIndex] || '',
-            isValid: validateEmail(email)
-          };
-        })
-        .filter(r => r.email);
+      // Auto-detect field mappings
+      const autoMapping = {
+        email: headers.find(h => h.toLowerCase().includes('email')) || '',
+        firstName: headers.find(h => h.toLowerCase().includes('first') || h.toLowerCase().includes('fname')) || '',
+        lastName: headers.find(h => h.toLowerCase().includes('last') || h.toLowerCase().includes('lname')) || '',
+        company: headers.find(h => h.toLowerCase().includes('company') || h.toLowerCase().includes('organization')) || '',
+        phone: headers.find(h => h.toLowerCase().includes('phone') || h.toLowerCase().includes('mobile')) || ''
+      };
       
-      // Remove duplicates and merge with existing
-      const existingEmails = recipients.map(r => r.email.toLowerCase());
-      const newRecipients = csvRecipients.filter(r => !existingEmails.includes(r.email.toLowerCase()));
-      const duplicates = csvRecipients.length - newRecipients.length;
-      
-      const updatedRecipients = [...recipients, ...newRecipients];
-      setRecipients(updatedRecipients);
-      onUpdate({ recipients: updatedRecipients });
-      
-      // Show validation summary
-      const invalidCount = newRecipients.filter(r => !r.isValid).length;
-      const errors = [];
-      if (duplicates > 0) errors.push(`${duplicates} duplicate emails skipped`);
-      if (invalidCount > 0) errors.push(`${invalidCount} invalid email addresses found`);
-      setValidationErrors(errors);
-      
+      setFieldMapping(autoMapping);
+      setShowFieldMapping(true);
       setIsUploading(false);
     };
     reader.readAsText(file);
+  };
+
+  const applyFieldMapping = () => {
+    const emailIndex = csvHeaders.indexOf(fieldMapping.email);
+    const firstNameIndex = csvHeaders.indexOf(fieldMapping.firstName);
+    const lastNameIndex = csvHeaders.indexOf(fieldMapping.lastName);
+    const companyIndex = csvHeaders.indexOf(fieldMapping.company);
+    const phoneIndex = csvHeaders.indexOf(fieldMapping.phone);
+    
+    const csvRecipients = csvData
+      .map((line, index) => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        const email = emailIndex >= 0 ? values[emailIndex] || '' : '';
+        return {
+          id: Date.now() + index,
+          email: email,
+          firstName: firstNameIndex >= 0 ? values[firstNameIndex] || '' : '',
+          lastName: lastNameIndex >= 0 ? values[lastNameIndex] || '' : '',
+          company: companyIndex >= 0 ? values[companyIndex] || '' : '',
+          phone: phoneIndex >= 0 ? values[phoneIndex] || '' : '',
+          isValid: validateEmail(email)
+        };
+      })
+      .filter(r => r.email);
+    
+    // Remove duplicates and merge with existing
+    const existingEmails = recipients.map(r => r.email.toLowerCase());
+    const newRecipients = csvRecipients.filter(r => !existingEmails.includes(r.email.toLowerCase()));
+    const duplicates = csvRecipients.length - newRecipients.length;
+    
+    const updatedRecipients = [...recipients, ...newRecipients];
+    setRecipients(updatedRecipients);
+    onUpdate({ recipients: updatedRecipients });
+    
+    // Show validation summary
+    const invalidCount = newRecipients.filter(r => !r.isValid).length;
+    const errors = [];
+    if (duplicates > 0) errors.push(`${duplicates} duplicate emails skipped`);
+    if (invalidCount > 0) errors.push(`${invalidCount} invalid email addresses found`);
+    setValidationErrors(errors);
+    
+    setShowFieldMapping(false);
   };
 
   const handleCSVUpload = (event) => {
@@ -261,6 +289,67 @@ const ImportSettings = ({ data, onUpdate }) => {
           Add Recipient
         </Button>
       </div>
+
+      {/* Field Mapping Modal */}
+      {showFieldMapping && (
+        <div className="field-mapping-overlay">
+          <div className="field-mapping-modal">
+            <div className="field-mapping-header">
+              <h3>Map CSV Fields</h3>
+              <p>Map your CSV columns to recipient fields</p>
+            </div>
+            
+            <div className="field-mapping-content">
+              <div className="csv-preview">
+                <h4>CSV Preview</h4>
+                <div className="csv-headers">
+                  {csvHeaders.map((header, index) => (
+                    <span key={index} className="csv-header">{header}</span>
+                  ))}
+                </div>
+                {csvData.slice(0, 3).map((row, index) => (
+                  <div key={index} className="csv-row">
+                    {row.split(',').map((cell, cellIndex) => (
+                      <span key={cellIndex} className="csv-cell">{cell.trim().replace(/"/g, '')}</span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="field-mappings">
+                <h4>Field Mappings</h4>
+                {Object.entries(fieldMapping).map(([field, value]) => (
+                  <div key={field} className="field-mapping-row">
+                    <label>{field.charAt(0).toUpperCase() + field.slice(1)}{field === 'email' ? ' *' : ''}</label>
+                    <select
+                      value={value}
+                      onChange={(e) => setFieldMapping(prev => ({ ...prev, [field]: e.target.value }))}
+                    >
+                      <option value="">-- Select Column --</option>
+                      {csvHeaders.map((header, index) => (
+                        <option key={index} value={header}>{header}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="field-mapping-actions">
+              <Button variant="outline" onClick={() => setShowFieldMapping(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={applyFieldMapping}
+                disabled={!fieldMapping.email}
+              >
+                Import Recipients
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CSV Upload */}
       <div className="csv-upload-container">
@@ -616,6 +705,112 @@ const ImportSettings = ({ data, onUpdate }) => {
         
         .recipients-list {
           margin-top: 2rem;
+        }
+        
+        .field-mapping-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+        
+        .field-mapping-modal {
+          background: white;
+          border-radius: 12px;
+          padding: 2rem;
+          max-width: 800px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+        
+        .field-mapping-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        
+        .field-mapping-header h3 {
+          color: #334155;
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        .field-mapping-content {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 2rem;
+          margin-bottom: 2rem;
+        }
+        
+        .csv-preview h4, .field-mappings h4 {
+          color: #334155;
+          margin-bottom: 1rem;
+          font-size: 1.1rem;
+        }
+        
+        .csv-headers {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+          flex-wrap: wrap;
+        }
+        
+        .csv-header {
+          background: #667eea;
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+        
+        .csv-row {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 0.25rem;
+          flex-wrap: wrap;
+        }
+        
+        .csv-cell {
+          background: #f1f5f9;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          color: #64748b;
+        }
+        
+        .field-mapping-row {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+        
+        .field-mapping-row label {
+          font-weight: 500;
+          color: #334155;
+          font-size: 0.9rem;
+        }
+        
+        .field-mapping-row select {
+          padding: 0.5rem;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          font-size: 0.9rem;
+        }
+        
+        .field-mapping-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #e2e8f0;
         }
         
         @media (max-width: 768px) {

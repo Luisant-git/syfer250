@@ -2,12 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Mail, Shield, AlertCircle, CheckCircle, Settings, User, Building } from 'lucide-react';
 import Button from '../../../components/UI/Button/Button';
 import apiService from '../../../services/api';
+import useToast from '../../../hooks/useToast';
 
 const SelectSender = ({ data, onUpdate, campaignData }) => {
+  const { showSuccess, showError } = useToast();
   const [senders, setSenders] = useState([]);
+  const [emailAccounts, setEmailAccounts] = useState([]);
   const [selectedSender, setSelectedSender] = useState(data || '');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showSMTPModal, setShowSMTPModal] = useState(false);
   const [newSender, setNewSender] = useState({ name: '', email: '' });
+  const [newAccountEmail, setNewAccountEmail] = useState('');
+  const [newAccountProvider, setNewAccountProvider] = useState('Gmail');
+  const [smtpConfig, setSMTPConfig] = useState({
+    email: '',
+    host: '',
+    port: 587,
+    username: '',
+    password: '',
+    secure: false
+  });
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -20,6 +35,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
 
   useEffect(() => {
     fetchSenders();
+    fetchEmailAccounts();
   }, []);
 
   const fetchSenders = async () => {
@@ -30,6 +46,17 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
       }
     } catch (error) {
       console.error('Failed to fetch senders:', error);
+    }
+  };
+
+  const fetchEmailAccounts = async () => {
+    try {
+      const response = await apiService.getEmailAccounts();
+      if (response.success) {
+        setEmailAccounts(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch email accounts:', error);
     }
   };
 
@@ -73,6 +100,26 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
       console.error('Failed to create sender:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddEmailAccount = async () => {
+    if (!newAccountEmail) {
+      showError('Email address is required');
+      return;
+    }
+
+    try {
+      const response = await apiService.addEmailAccount(newAccountEmail, newAccountProvider);
+      if (response.success) {
+        showSuccess('Email account connected successfully');
+        setNewAccountEmail('');
+        setShowConnectModal(false);
+        fetchEmailAccounts();
+      }
+    } catch (error) {
+      console.error('Failed to add email account:', error);
+      showError(error.message || 'Failed to connect email account');
     }
   };
 
@@ -200,12 +247,86 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
         </div>
       ))}
 
+      {/* Email Accounts Section */}
+      {emailAccounts.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h3 style={{ marginBottom: '1rem', color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Mail size={20} />
+            Connected Email Accounts
+          </h3>
+          {emailAccounts.map((account) => (
+            <div key={account.id} style={{ marginBottom: '1rem' }}>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '1rem', 
+                border: '1px solid #ddd', 
+                borderRadius: '8px', 
+                cursor: 'pointer',
+                backgroundColor: selectedSender === account.id ? '#e3f2fd' : 'white'
+              }}>
+                <input
+                  type="radio"
+                  name="sender"
+                  value={account.id}
+                  checked={selectedSender === account.id}
+                  onChange={() => handleSenderSelect(account.id)}
+                  style={{ marginRight: '0.75rem' }}
+                />
+                <div className="connect-option__icon" style={{ marginRight: '0.75rem' }}>
+                  {account.provider === 'Gmail' && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                  )}
+                  {account.provider === 'Outlook' && (
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/1200px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png" alt="Outlook" width="24" height="24" />
+                  )}
+                  {account.provider === 'SMTP' && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <strong>{account.email}</strong>
+                    <span style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.25rem',
+                      color: account.status === 'connected' ? '#28a745' : '#856404', 
+                      fontSize: '0.8rem',
+                      backgroundColor: account.status === 'connected' ? '#d4edda' : '#fff3cd',
+                      padding: '0.125rem 0.375rem',
+                      borderRadius: '12px'
+                    }}>
+                      {account.status === 'connected' ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                      {account.status}
+                    </span>
+                  </div>
+                  <div style={{ color: '#666', fontSize: '0.9rem' }}>{account.provider} Account</div>
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Add New Sender */}
       {!showAddForm ? (
-        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <div style={{ textAlign: 'center', marginTop: '1rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <Button variant="primary" onClick={() => setShowConnectModal(true)}>
+            <Plus size={16} />
+            Connect Email Account
+          </Button>
           <Button variant="outline" onClick={() => setShowAddForm(true)}>
             <Plus size={16} />
-            Add New Sender
+            Add Custom Sender
           </Button>
         </div>
       ) : (
@@ -344,6 +465,231 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
             <li>Set up a dedicated reply-to address for better engagement</li>
             <li>Monitor sender reputation and engagement metrics</li>
           </ul>
+        </div>
+      )}
+
+      {/* Connect Email Modal */}
+      {showConnectModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0 }}>Connect Your Email Account</h3>
+              <Button variant="ghost" onClick={() => setShowConnectModal(false)} style={{ fontSize: '24px', padding: '8px 16px' }}>×</Button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <div style={{ marginRight: '1rem' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>Google / Gmail</h4>
+                  <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Gmail account</p>
+                  <input
+                    type="email"
+                    placeholder="Enter Gmail address"
+                    value={newAccountEmail}
+                    onChange={(e) => setNewAccountEmail(e.target.value)}
+                    style={{ width: '80%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <Button variant="primary" onClick={() => { setNewAccountProvider('Gmail'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <div style={{ marginRight: '1rem' }}>
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg/1200px-Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg.png" alt="Outlook" width="40" height="40" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>Microsoft Outlook</h4>
+                  <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Outlook account</p>
+                  <input
+                    type="email"
+                    placeholder="Enter Outlook address"
+                    value={newAccountEmail}
+                    onChange={(e) => setNewAccountEmail(e.target.value)}
+                    style={{ width: '80%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <Button variant="primary" onClick={() => { setNewAccountProvider('Outlook'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <div style={{ marginRight: '1rem' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                    <path d="M7 10l5 3 5-3" strokeDasharray="2,2"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>SMTP Server</h4>
+                  <p style={{ margin: 0, color: '#666' }}>Connect using SMTP configuration</p>
+                </div>
+                <Button variant="outline" onClick={() => { setShowConnectModal(false); setShowSMTPModal(true); }}>Configure</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SMTP Configuration Modal */}
+      {showSMTPModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0 }}>Configure SMTP Server</h3>
+              <Button variant="ghost" onClick={() => setShowSMTPModal(false)} style={{ fontSize: '24px', padding: '8px 16px' }}>×</Button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email Address *</label>
+                <input
+                  type="email"
+                  value={smtpConfig.email}
+                  onChange={(e) => setSMTPConfig({...smtpConfig, email: e.target.value})}
+                  placeholder="your@email.com"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>SMTP Host *</label>
+                  <input
+                    type="text"
+                    value={smtpConfig.host}
+                    onChange={(e) => setSMTPConfig({...smtpConfig, host: e.target.value})}
+                    placeholder="smtp.gmail.com"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Port *</label>
+                  <input
+                    type="number"
+                    value={smtpConfig.port}
+                    onChange={(e) => setSMTPConfig({...smtpConfig, port: parseInt(e.target.value)})}
+                    placeholder="587"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Username *</label>
+                <input
+                  type="text"
+                  value={smtpConfig.username}
+                  onChange={(e) => setSMTPConfig({...smtpConfig, username: e.target.value})}
+                  placeholder="Usually your email address"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Password *</label>
+                <input
+                  type="password"
+                  value={smtpConfig.password}
+                  onChange={(e) => setSMTPConfig({...smtpConfig, password: e.target.value})}
+                  placeholder="Your email password or app password"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={smtpConfig.secure}
+                    onChange={(e) => setSMTPConfig({...smtpConfig, secure: e.target.checked})}
+                  />
+                  Use SSL/TLS (recommended for port 465)
+                </label>
+              </div>
+              
+              <div style={{ padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#666' }}>Common Settings:</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', fontSize: '0.8rem' }}>
+                  <div><strong>Gmail:</strong> smtp.gmail.com:587</div>
+                  <div><strong>Outlook:</strong> smtp-mail.outlook.com:587</div>
+                  <div><strong>Yahoo:</strong> smtp.mail.yahoo.com:587</div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <Button variant="outline" onClick={() => setShowSMTPModal(false)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  if (!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password) {
+                    showError('All SMTP fields are required');
+                    return;
+                  }
+                  try {
+                    const response = await apiService.addEmailAccount(smtpConfig.email, 'SMTP', smtpConfig);
+                    if (response.success) {
+                      showSuccess('SMTP account connected successfully');
+                      setSMTPConfig({ email: '', host: '', port: 587, username: '', password: '', secure: false });
+                      setShowSMTPModal(false);
+                      fetchEmailAccounts();
+                    }
+                  } catch (error) {
+                    showError(error.message || 'Failed to connect SMTP account');
+                  }
+                }}
+                disabled={!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password}
+              >
+                Connect SMTP
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

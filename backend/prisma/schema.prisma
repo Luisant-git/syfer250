@@ -67,6 +67,8 @@ model Recipient {
   email      String
   firstName  String?
   lastName   String?
+  company    String?
+  phone      String?
   status     RecipientStatus @default(PENDING)
   campaignId String
   sentAt     DateTime?

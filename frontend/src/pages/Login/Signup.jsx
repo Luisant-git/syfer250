@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { BsFillChatSquareDotsFill } from 'react-icons/bs';
 import { FaEyeSlash, FaEye } from 'react-icons/fa';
-import apiService from '../../services/api';
 import useToast from '../../hooks/useToast';
 import ToastContainer from '../../components/UI/ToastContainer/ToastContainer';
 import './Signup.scss';
@@ -24,6 +24,8 @@ const SignUpPage = () => {
     setIsButtonDisabled(!(fullName && email && password && source));
   }, [fullName, email, password, source]);
 
+  const { register } = useAuth();
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isButtonDisabled) return;
@@ -35,17 +37,15 @@ const SignUpPage = () => {
       const [firstName, ...lastNameParts] = fullName.split(' ');
       const lastName = lastNameParts.join(' ');
       
-      const response = await apiService.register({
+      await register({
         email,
         password,
         firstName,
         lastName
       });
       
-      if (response.success) {
-        showSuccess('Account created successfully! Welcome to Syfer250.');
-        setTimeout(() => navigate('/dashboard'), 1000);
-      }
+      showSuccess('Account created successfully! Welcome to Syfer250.');
+      navigate('/dashboard');
     } catch (error) {
       setError(error.message || 'Registration failed');
       showError(error.message || 'Registration failed');

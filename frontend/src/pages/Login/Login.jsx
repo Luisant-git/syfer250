@@ -1,10 +1,9 @@
 // LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../../context/AuthContext";
 import { BsFillChatSquareDotsFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import apiService from "../../services/api";
 import useToast from "../../hooks/useToast";
 import ToastContainer from "../../components/UI/ToastContainer/ToastContainer";
 
@@ -24,17 +23,17 @@ const LoginPage = () => {
     setShowPassword(!showPassword);
   };
 
+  const { login } = useAuth();
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const response = await apiService.login(email, password);
-      if (response.success) {
-        showSuccess("Login successful! Welcome back.");
-        setTimeout(() => navigate("/dashboard"), 1000);
-      }
+      await login(email, password);
+      showSuccess("Login successful! Welcome back.");
+      navigate("/dashboard");
     } catch (error) {
       setError(error.message || "Login failed");
       showError(error.message || "Login failed");
