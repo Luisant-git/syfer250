@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
 import { google } from 'googleapis';
+import axios from 'axios';
 
 const router = Router();
 
@@ -54,9 +55,9 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
     console.log('Gmail OAuth code received:', code);
     
     const oauth2Client = new google.auth.OAuth2(
-      '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com',
-      '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',
-      'http://localhost:5174/campaigns/new'
+      process.env.GMAIL_CLIENT_ID,
+      process.env.GMAIL_CLIENT_SECRET,
+      process.env.GMAIL_REDIRECT_URI
     );
     
     const { tokens } = await oauth2Client.getToken(code);
@@ -126,16 +127,26 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
     
     console.log('Outlook OAuth code received:', code);
     
-    // Exchange code for tokens (simplified for testing)
-    const tokenData = {
-      access_token: 'mock_access_token',
-      refresh_token: 'mock_refresh_token',
-      expires_in: 3600
-    };
+    const tokenResponse = await axios.post(`https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`, {
+      client_id: process.env.OUTLOOK_CLIENT_ID,
+      client_secret: process.env.OUTLOOK_CLIENT_SECRET,
+      code: code,
+      redirect_uri: process.env.OUTLOOK_REDIRECT_URI,
+      grant_type: 'authorization_code',
+      scope: 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send https://graph.microsoft.com/user.read'
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
     
     res.json({
       success: true,
-      data: tokenData
+      data: {
+        access_token: tokenResponse.data.access_token,
+        refresh_token: tokenResponse.data.refresh_token,
+        expires_in: tokenResponse.data.expires_in
+      }
     });
   } catch (error) {
     console.error('Outlook OAuth error:', error);
