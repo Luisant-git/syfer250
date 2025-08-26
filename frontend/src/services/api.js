@@ -288,14 +288,14 @@ class ApiService {
 
   // OAuth methods
   async exchangeGmailCode(code) {
-    return this.request('/auth/oauth/gmail', {
+    return this.request('/oauth/gmail/callback', {
       method: 'POST',
       body: { code },
     });
   }
 
   async exchangeOutlookCode(code) {
-    return this.request('/auth/oauth/outlook', {
+    return this.request('/oauth/outlook/callback', {
       method: 'POST',
       body: { code },
     });

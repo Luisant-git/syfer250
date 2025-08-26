@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
+import { google } from 'googleapis';
 
 const router = Router();
 
@@ -52,16 +53,21 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
     
     console.log('Gmail OAuth code received:', code);
     
-    // Exchange code for tokens (simplified for testing)
-    const tokenData = {
-      access_token: 'mock_access_token',
-      refresh_token: 'mock_refresh_token',
-      expires_in: 3600
-    };
+    const oauth2Client = new google.auth.OAuth2(
+      '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com',
+      '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',
+      'http://localhost:5174/campaigns/new'
+    );
+    
+    const { tokens } = await oauth2Client.getToken(code);
     
     res.json({
       success: true,
-      data: tokenData
+      data: {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600
+      }
     });
   } catch (error) {
     console.error('Gmail OAuth error:', error);

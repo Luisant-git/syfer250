@@ -44,6 +44,7 @@ export const login = async (req: Request, res: Response) => {
       data: { token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ success: false, error: 'Login failed' });
   }
 };
