@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Mail, Shield, AlertCircle, CheckCircle, Settings, User, Building, Edit, Trash2 } from 'lucide-react';
 import Button from '../../../components/UI/Button/Button';
 import apiService from '../../../services/api';
+import oauthService from '../../../services/oauth';
 import useToast from '../../../hooks/useToast';
 
 const SelectSender = ({ data, onUpdate, campaignData }) => {
@@ -13,7 +14,8 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showSMTPModal, setShowSMTPModal] = useState(false);
   const [newSender, setNewSender] = useState({ name: '', email: '' });
-  const [newAccountEmail, setNewAccountEmail] = useState('');
+  const [gmailEmail, setGmailEmail] = useState('');
+  const [outlookEmail, setOutlookEmail] = useState('');
   const [newAccountProvider, setNewAccountProvider] = useState('Gmail');
   const [smtpConfig, setSMTPConfig] = useState({
     email: '',
@@ -95,6 +97,37 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
       console.error('Failed to create sender:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle OAuth callback
+  const handleOAuthCallback = async (code) => {
+    try {
+      const pendingGmailEmail = localStorage.getItem('pendingGmailEmail');
+      const pendingOutlookEmail = localStorage.getItem('pendingOutlookEmail');
+      
+      if (pendingGmailEmail) {
+        const response = await apiService.exchangeGmailCode(code);
+        if (response.success) {
+          await apiService.addEmailAccount(pendingGmailEmail, 'Gmail', response.data);
+          localStorage.removeItem('pendingGmailEmail');
+          showSuccess('Gmail account connected successfully');
+          fetchEmailAccounts();
+        }
+      } else if (pendingOutlookEmail) {
+        const response = await apiService.exchangeOutlookCode(code);
+        if (response.success) {
+          await apiService.addEmailAccount(pendingOutlookEmail, 'Outlook', response.data);
+          localStorage.removeItem('pendingOutlookEmail');
+          showSuccess('Outlook account connected successfully');
+          fetchEmailAccounts();
+        }
+      }
+      
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      showError('Failed to connect email account');
     }
   };
 
@@ -405,13 +438,17 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                   <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Gmail account</p>
                   <input
                     type="email"
-                    placeholder="Enter Gmail address"
-                    value={newAccountEmail}
-                    onChange={(e) => setNewAccountEmail(e.target.value)}
-                    style={{ width: '80%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    placeholder="Gmail"
+                    value={gmailEmail}
+                    onChange={(e) => setGmailEmail(e.target.value)}
+                    style={{ width: '60%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                 </div>
-                <Button variant="primary" onClick={() => { setNewAccountProvider('Gmail'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
+                <Button variant="primary" onClick={() => { 
+                  console.log('Gmail OAuth clicked:', gmailEmail);
+                  localStorage.setItem('pendingGmailEmail', gmailEmail);
+                  oauthService.initiateGmailAuth();
+                }} disabled={!gmailEmail}>Connect</Button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
@@ -423,13 +460,17 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                   <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Outlook account</p>
                   <input
                     type="email"
-                    placeholder="Enter Outlook address"
-                    value={newAccountEmail}
-                    onChange={(e) => setNewAccountEmail(e.target.value)}
-                    style={{ width: '80%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    placeholder="Outlook"
+                    value={outlookEmail}
+                    onChange={(e) => setOutlookEmail(e.target.value)}
+                    style={{ width: '60%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                 </div>
-                <Button variant="primary" onClick={() => { setNewAccountProvider('Outlook'); handleAddEmailAccount(); }} disabled={!newAccountEmail}>Connect</Button>
+                <Button variant="primary" onClick={() => { 
+                  console.log('Outlook OAuth clicked:', outlookEmail);
+                  localStorage.setItem('pendingOutlookEmail', outlookEmail);
+                  oauthService.initiateOutlookAuth();
+                }} disabled={!outlookEmail}>Connect</Button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>

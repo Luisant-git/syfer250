@@ -12,6 +12,7 @@ import analyticsRoutes from './routes/analytics';
 import userRoutes from './routes/user';
 import blockListRoutes from './routes/blockList';
 import inboxRoutes from './routes/inbox';
+import oauthRoutes from './routes/oauth';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/blocklist', blockListRoutes);
 app.use('/api/inbox', inboxRoutes);
+app.use('/api/oauth', oauthRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -65,6 +67,17 @@ app.get('/', (req, res) => {
     message: 'Email Campaign Backend API is running',
     version: '1.0.0',
     docs: '/api-docs'
+  });
+});
+
+// Direct OAuth test route
+app.post('/api/oauth-test', (req, res) => {
+  const { code } = req.body;
+  console.log('OAuth test code:', code);
+  res.json({
+    success: true,
+    message: 'OAuth test working',
+    code: code
   });
 });
 

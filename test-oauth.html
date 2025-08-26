@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Test</title>
+</head>
+<body>
+    <h1>OAuth Configuration Test</h1>
+    
+    <h2>Gmail OAuth Test</h2>
+    <button onclick="testGmail()">Test Gmail OAuth</button>
+    
+    <h2>Outlook OAuth Test</h2>
+    <button onclick="testOutlook()">Test Outlook OAuth</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const GMAIL_CLIENT_ID = '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com';
+        const OUTLOOK_CLIENT_ID = '5a6be591-1c64-4c4e-b98c-4b98d9f5bfdb';
+        
+        function testGmail() {
+            const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${GMAIL_CLIENT_ID}&` +
+                `redirect_uri=${encodeURIComponent('https://syfer25.com')}&` +
+                `scope=${encodeURIComponent(scope)}&` +
+                `response_type=code&` +
+                `access_type=offline&` +
+                `prompt=consent`;
+            
+            document.getElementById('result').innerHTML = `<p>Gmail Auth URL: <a href="${authUrl}" target="_blank">Click to test</a></p>`;
+        }
+        
+        function testOutlook() {
+            const scope = 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send https://graph.microsoft.com/user.read';
+            const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+                `client_id=${OUTLOOK_CLIENT_ID}&` +
+                `response_type=code&` +
+                `redirect_uri=${encodeURIComponent('https://www.syfer25.com')}&` +
+                `scope=${encodeURIComponent(scope)}&` +
+                `response_mode=query`;
+            
+            document.getElementById('result').innerHTML = `<p>Outlook Auth URL: <a href="${authUrl}" target="_blank">Click to test</a></p>`;
+        }
+    </script>
+</body>
+</html>

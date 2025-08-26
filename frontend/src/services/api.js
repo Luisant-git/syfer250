@@ -285,6 +285,35 @@ class ApiService {
       body: { name, mapping },
     });
   }
+
+  // OAuth methods
+  async exchangeGmailCode(code) {
+    return this.request('/auth/oauth/gmail', {
+      method: 'POST',
+      body: { code },
+    });
+  }
+
+  async exchangeOutlookCode(code) {
+    return this.request('/auth/oauth/outlook', {
+      method: 'POST',
+      body: { code },
+    });
+  }
+
+  async refreshGmailToken(refreshToken) {
+    return this.request('/oauth/gmail/refresh', {
+      method: 'POST',
+      body: { refreshToken },
+    });
+  }
+
+  async refreshOutlookToken(refreshToken) {
+    return this.request('/oauth/outlook/refresh', {
+      method: 'POST',
+      body: { refreshToken },
+    });
+  }
 }
 
 export default new ApiService();
