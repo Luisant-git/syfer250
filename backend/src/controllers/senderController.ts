@@ -12,21 +12,40 @@ export const createSender = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password, host, port, isVerified } = req.body;
     
+    // Check if sender with this email already exists for this user
+    const existingSender = await prisma.sender.findFirst({
+      where: {
+        email,
+        userId: req.user!.id
+      }
+    });
+    
+    if (existingSender) {
+      return res.status(409).json({ 
+        success: false, 
+        error: 'A sender with this email already exists' 
+      });
+    }
+    
     const sender = await prisma.sender.create({
       data: {
         name,
         email,
-        password,
-        host,
-        port,
-        isVerified,
+        password: password || null,
+        host: host || null,
+        port: port || null,
+        isVerified: isVerified || false,
         userId: req.user!.id
       }
     });
 
     res.status(201).json({ success: true, data: sender });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to create sender' });
+    console.error('Create sender error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create sender' 
+    });
   }
 };
 

@@ -65,6 +65,13 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Authorization code is required'
+      });
+    }
+    
     console.log('Gmail OAuth code received:', code);
     
     const oauth2Client = new google.auth.OAuth2(
@@ -74,11 +81,20 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
     );
     
     const { tokens } = await oauth2Client.getToken(code);
+    
+    if (!tokens.access_token) {
+      throw new Error('No access token received from Google');
+    }
+    
     oauth2Client.setCredentials(tokens);
     
     // Get user profile to fetch email
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
     const profile = await gmail.users.getProfile({ userId: 'me' });
+    
+    if (!profile.data.emailAddress) {
+      throw new Error('Could not retrieve email address from Gmail profile');
+    }
     
     res.json({
       success: true,
@@ -93,7 +109,7 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
     console.error('Gmail OAuth error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to exchange Gmail code'
+      error: error instanceof Error ? error.message : 'Failed to exchange Gmail code'
     });
   }
 });
@@ -144,6 +160,13 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Authorization code is required'
+      });
+    }
+    
     console.log('Outlook OAuth code received:', code);
     
     const tokenResponse = await axios.post(`https://login.microsoftonline.com/common/oauth2/v2.0/token`, {
@@ -161,6 +184,10 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
     
     const tokenData = tokenResponse.data as MicrosoftTokenResponse;
     
+    if (!tokenData.access_token) {
+      throw new Error('No access token received from Microsoft');
+    }
+    
     // Get user profile to fetch email
     const userResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
       headers: {
@@ -169,6 +196,11 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
     });
     
     const userData = userResponse.data as MicrosoftUserResponse;
+    const email = userData.mail || userData.userPrincipalName;
+    
+    if (!email) {
+      throw new Error('Could not retrieve email address from Microsoft profile');
+    }
     
     res.json({
       success: true,
@@ -176,14 +208,14 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
         expires_in: tokenData.expires_in,
-        email: userData.mail || userData.userPrincipalName
+        email: email
       }
     });
   } catch (error) {
     console.error('Outlook OAuth error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to exchange Outlook code'
+      error: error instanceof Error ? error.message : 'Failed to exchange Outlook code'
     });
   }
 });

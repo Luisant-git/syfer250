@@ -41,6 +41,13 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
 
   useEffect(() => {
     fetchSenders();
+    
+    // Check for OAuth success message
+    const oauthSuccess = localStorage.getItem('oauthSuccess');
+    if (oauthSuccess) {
+      showSuccess(oauthSuccess);
+      localStorage.removeItem('oauthSuccess');
+    }
   }, []);
 
   const fetchSenders = async () => {
