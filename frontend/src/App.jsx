@@ -15,6 +15,7 @@ import Profile from "./pages/Profile/Profile"
 import Security from "./pages/Security/Security"
 import GlobalBlockList from "./pages/GlobalBlockList/GlobalBlockList"
 import PlansAndBilling from "./pages/PlansAndBilling/PlansAndBilling"
+import OAuthCallback from "./pages/OAuthCallback"
 import "./styles/global.scss"
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
           
           <Route path="/" element={<Navigate to="/login" replace />} />
           

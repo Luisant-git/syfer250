@@ -3,6 +3,19 @@ import { Request, Response } from 'express';
 import { google } from 'googleapis';
 import axios from 'axios';
 
+interface MicrosoftTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
+interface MicrosoftUserResponse {
+  mail: string;
+  userPrincipalName: string;
+}
+
 const router = Router();
 
 /**
@@ -61,13 +74,19 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
     );
     
     const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    
+    // Get user profile to fetch email
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const profile = await gmail.users.getProfile({ userId: 'me' });
     
     res.json({
       success: true,
       data: {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600
+        expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600,
+        email: profile.data.emailAddress
       }
     });
   } catch (error) {
@@ -127,7 +146,7 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
     
     console.log('Outlook OAuth code received:', code);
     
-    const tokenResponse = await axios.post(`https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`, {
+    const tokenResponse = await axios.post(`https://login.microsoftonline.com/common/oauth2/v2.0/token`, {
       client_id: process.env.OUTLOOK_CLIENT_ID,
       client_secret: process.env.OUTLOOK_CLIENT_SECRET,
       code: code,
@@ -140,12 +159,24 @@ router.post('/outlook/callback', async (req: Request, res: Response) => {
       }
     });
     
+    const tokenData = tokenResponse.data as MicrosoftTokenResponse;
+    
+    // Get user profile to fetch email
+    const userResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
+    
+    const userData = userResponse.data as MicrosoftUserResponse;
+    
     res.json({
       success: true,
       data: {
-        access_token: tokenResponse.data.access_token,
-        refresh_token: tokenResponse.data.refresh_token,
-        expires_in: tokenResponse.data.expires_in
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_in: tokenData.expires_in,
+        email: userData.mail || userData.userPrincipalName
       }
     });
   } catch (error) {

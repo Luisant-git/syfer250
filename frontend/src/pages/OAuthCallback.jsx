@@ -13,27 +13,42 @@ const OAuthCallback = () => {
       if (code) {
         console.log('OAuth code received:', code);
         
-        const pendingGmailEmail = localStorage.getItem('pendingGmailEmail');
-        const pendingOutlookEmail = localStorage.getItem('pendingOutlookEmail');
+        const pendingProvider = localStorage.getItem('pendingProvider');
         
         try {
-          if (pendingGmailEmail) {
+          if (pendingProvider === 'gmail') {
             console.log('Processing Gmail OAuth...');
             const response = await apiService.exchangeGmailCode(code);
             console.log('Gmail response:', response);
-            localStorage.removeItem('pendingGmailEmail');
-          } else if (pendingOutlookEmail) {
+            
+            if (response.success && response.data.email) {
+              const senderData = {
+                name: response.data.email.split('@')[0],
+                email: response.data.email
+              };
+              await apiService.createSender(senderData);
+            }
+          } else if (pendingProvider === 'outlook') {
             console.log('Processing Outlook OAuth...');
             const response = await apiService.exchangeOutlookCode(code);
             console.log('Outlook response:', response);
-            localStorage.removeItem('pendingOutlookEmail');
+            
+            if (response.success && response.data.email) {
+              const senderData = {
+                name: response.data.email.split('@')[0],
+                email: response.data.email
+              };
+              await apiService.createSender(senderData);
+            }
           }
+          
+          localStorage.removeItem('pendingProvider');
         } catch (error) {
           console.error('OAuth error:', error);
         }
       }
       
-      navigate('/new-campaign');
+      navigate('/campaigns/new');
     };
 
     handleCallback();

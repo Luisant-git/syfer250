@@ -14,8 +14,7 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showSMTPModal, setShowSMTPModal] = useState(false);
   const [newSender, setNewSender] = useState({ name: '', email: '' });
-  const [gmailEmail, setGmailEmail] = useState('');
-  const [outlookEmail, setOutlookEmail] = useState('');
+
   const [newAccountProvider, setNewAccountProvider] = useState('Gmail');
   const [smtpConfig, setSMTPConfig] = useState({
     email: '',
@@ -103,27 +102,37 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
   // Handle OAuth callback
   const handleOAuthCallback = async (code) => {
     try {
-      const pendingGmailEmail = localStorage.getItem('pendingGmailEmail');
-      const pendingOutlookEmail = localStorage.getItem('pendingOutlookEmail');
+      const pendingProvider = localStorage.getItem('pendingProvider');
       
-      if (pendingGmailEmail) {
+      if (pendingProvider === 'gmail') {
         const response = await apiService.exchangeGmailCode(code);
         if (response.success) {
-          await apiService.addEmailAccount(pendingGmailEmail, 'Gmail', response.data);
-          localStorage.removeItem('pendingGmailEmail');
-          showSuccess('Gmail account connected successfully');
-          fetchEmailAccounts();
+          const senderData = {
+            name: response.data.email.split('@')[0],
+            email: response.data.email
+          };
+          const senderResponse = await apiService.createSender(senderData);
+          if (senderResponse.success) {
+            showSuccess('Gmail account connected successfully');
+            fetchSenders();
+          }
         }
-      } else if (pendingOutlookEmail) {
+      } else if (pendingProvider === 'outlook') {
         const response = await apiService.exchangeOutlookCode(code);
         if (response.success) {
-          await apiService.addEmailAccount(pendingOutlookEmail, 'Outlook', response.data);
-          localStorage.removeItem('pendingOutlookEmail');
-          showSuccess('Outlook account connected successfully');
-          fetchEmailAccounts();
+          const senderData = {
+            name: response.data.email.split('@')[0],
+            email: response.data.email
+          };
+          const senderResponse = await apiService.createSender(senderData);
+          if (senderResponse.success) {
+            showSuccess('Outlook account connected successfully');
+            fetchSenders();
+          }
         }
       }
       
+      localStorage.removeItem('pendingProvider');
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
       console.error('OAuth callback error:', error);
@@ -435,20 +444,12 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <h4 style={{ margin: '0 0 0.5rem 0' }}>Google / Gmail</h4>
-                  <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Gmail account</p>
-                  <input
-                    type="email"
-                    placeholder="Gmail"
-                    value={gmailEmail}
-                    onChange={(e) => setGmailEmail(e.target.value)}
-                    style={{ width: '60%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
+                  <p style={{ margin: 0, color: '#666' }}>Connect your Gmail account</p>
                 </div>
                 <Button variant="primary" onClick={() => { 
-                  console.log('Gmail OAuth clicked:', gmailEmail);
-                  localStorage.setItem('pendingGmailEmail', gmailEmail);
+                  localStorage.setItem('pendingProvider', 'gmail');
                   oauthService.initiateGmailAuth();
-                }} disabled={!gmailEmail}>Connect</Button>
+                }}>Connect</Button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
@@ -457,20 +458,12 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <h4 style={{ margin: '0 0 0.5rem 0' }}>Microsoft Outlook</h4>
-                  <p style={{ margin: '0 0 0.5rem 0', color: '#666' }}>Connect your Outlook account</p>
-                  <input
-                    type="email"
-                    placeholder="Outlook"
-                    value={outlookEmail}
-                    onChange={(e) => setOutlookEmail(e.target.value)}
-                    style={{ width: '60%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
+                  <p style={{ margin: 0, color: '#666' }}>Connect your Outlook account</p>
                 </div>
                 <Button variant="primary" onClick={() => { 
-                  console.log('Outlook OAuth clicked:', outlookEmail);
-                  localStorage.setItem('pendingOutlookEmail', outlookEmail);
+                  localStorage.setItem('pendingProvider', 'outlook');
                   oauthService.initiateOutlookAuth();
-                }} disabled={!outlookEmail}>Connect</Button>
+                }}>Connect</Button>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
@@ -602,33 +595,42 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
               <Button variant="outline" onClick={() => setShowSMTPModal(false)}>Cancel</Button>
               <Button
                 variant="primary"
-                onClick={async () => {
+onClick={async () => {
                   if (!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password) {
                     showError('All SMTP fields are required');
                     return;
                   }
+                  
+                  setLoading(true);
                   try {
-                    const data = {
-                      name: smtpConfig.username,
+                    const senderData = {
+                      name: smtpConfig.email.split('@')[0],
                       email: smtpConfig.email,
                       password: smtpConfig.password,
                       host: smtpConfig.host,
                       port: smtpConfig.port,
-                      isVerified: smtpConfig.secure,
-                    }
-                    const response = await apiService.createSender(data);
+                      isVerified: smtpConfig.secure
+                    };
+                    
+                    console.log('Creating SMTP sender:', senderData);
+                    const response = await apiService.createSender(senderData);
+                    
                     if (response.success) {
                       showSuccess('SMTP account connected successfully');
-                      setSenders(prev => [...prev, response.data]);
+                      fetchSenders();
                       setSMTPConfig({ email: '', host: '', port: 587, username: '', password: '', secure: false });
                       setShowSMTPModal(false);
-                      fetchSenders();
+                    } else {
+                      showError(response.error || 'Failed to connect SMTP account');
                     }
                   } catch (error) {
+                    console.error('SMTP connection error:', error);
                     showError(error.message || 'Failed to connect SMTP account');
+                  } finally {
+                    setLoading(false);
                   }
                 }}
-                disabled={!smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password}
+disabled={loading || !smtpConfig.email || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password}
               >
                 Connect SMTP
               </Button>
