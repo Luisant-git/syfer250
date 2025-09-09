@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
-import fetch from 'node-fetch';
 import axios from 'axios';
 
 interface GoogleTokenResponse {
@@ -32,30 +31,41 @@ interface MicrosoftUserResponse {
 
 const router = Router();
 
+// Debug endpoint - REMOVE IN PRODUCTION
+router.get('/debug/env', (req: Request, res: Response) => {
+  res.json({
+    GMAIL_CLIENT_ID: process.env.GMAIL_CLIENT_ID,
+    GMAIL_REDIRECT_URI: process.env.GMAIL_REDIRECT_URI,
+    GMAIL_CLIENT_SECRET_EXISTS: !!process.env.GMAIL_CLIENT_SECRET,
+    GMAIL_CLIENT_SECRET_LENGTH: process.env.GMAIL_CLIENT_SECRET?.length || 0
+  });
+});
+
 router.post('/gmail/callback', async (req: Request, res: Response) => {
   const { code } = req.body;
 
   try {
-    const response = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
+    const response = await axios.post("https://oauth2.googleapis.com/token", 
+      new URLSearchParams({
         code,
         client_id: process.env.GMAIL_CLIENT_ID!,
         client_secret: process.env.GMAIL_CLIENT_SECRET!,
         redirect_uri: process.env.GMAIL_REDIRECT_URI!,
         grant_type: "authorization_code",
-      }),
-    });
+      }).toString(),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      }
+    );
 
-    const tokens = await response.json() as GoogleTokenResponse;
+    const tokens = response.data as GoogleTokenResponse;
     
     if (tokens.access_token) {
       // Get user email
-      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { 'Authorization': `Bearer ${tokens.access_token}` }
       });
-      const userInfo = await userResponse.json() as GoogleUserResponse;
+      const userInfo = userResponse.data as GoogleUserResponse;
       
       res.json({
         success: true,
