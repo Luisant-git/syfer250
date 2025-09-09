@@ -1,7 +1,21 @@
 import { Router } from 'express';
 import { Request, Response } from 'express';
-import { google } from 'googleapis';
+import fetch from 'node-fetch';
 import axios from 'axios';
+
+interface GoogleTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+  scope?: string;
+}
+
+interface GoogleUserResponse {
+  email: string;
+  name?: string;
+  picture?: string;
+}
 
 interface MicrosoftTokenResponse {
   access_token: string;
@@ -62,54 +76,50 @@ const router = Router();
  *         description: Failed to exchange code
  */
 router.post('/gmail/callback', async (req: Request, res: Response) => {
+  const { code } = req.body;
+
   try {
-    const { code } = req.body;
-    
-    if (!code) {
-      return res.status(400).json({
-        success: false,
-        error: 'Authorization code is required'
-      });
-    }
-    
-    console.log('Gmail OAuth code received:', code);
-    
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GMAIL_CLIENT_ID,
-      process.env.GMAIL_CLIENT_SECRET,
-      process.env.GMAIL_REDIRECT_URI
-    );
-    
-    const { tokens } = await oauth2Client.getToken(code);
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GMAIL_CLIENT_ID!,
+        client_secret: process.env.GMAIL_CLIENT_SECRET!,
+        redirect_uri: process.env.GMAIL_REDIRECT_URI!,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokens = await response.json() as GoogleTokenResponse;
     
     if (!tokens.access_token) {
       throw new Error('No access token received from Google');
     }
+
+    // Get user email using the access token
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${tokens.access_token}`
+      }
+    });
     
-    oauth2Client.setCredentials(tokens);
-    
-    // Get user profile to fetch email
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    const profile = await gmail.users.getProfile({ userId: 'me' });
-    
-    if (!profile.data.emailAddress) {
-      throw new Error('Could not retrieve email address from Gmail profile');
-    }
+    const userInfo = await userResponse.json() as GoogleUserResponse;
     
     res.json({
       success: true,
       data: {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
-        expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600,
-        email: profile.data.emailAddress
+        expires_in: tokens.expires_in || 3600,
+        email: userInfo.email
       }
     });
-  } catch (error) {
-    console.error('Gmail OAuth error:', error);
-    res.status(500).json({
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to exchange Gmail code'
+      error: err instanceof Error ? err.message : "Token exchange failed" 
     });
   }
 });
