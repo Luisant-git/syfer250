@@ -48,8 +48,27 @@ router.post('/gmail/callback', async (req: Request, res: Response) => {
       }),
     });
 
-    const tokens = await response.json();
-    res.json(tokens); // send back access_token & refresh_token
+    const tokens = await response.json() as GoogleTokenResponse;
+    
+    if (tokens.access_token) {
+      // Get user email
+      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+      });
+      const userInfo = await userResponse.json() as GoogleUserResponse;
+      
+      res.json({
+        success: true,
+        data: {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_in: tokens.expires_in,
+          email: userInfo.email
+        }
+      });
+    } else {
+      res.json(tokens); // Return error from Google
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Token exchange failed" });
