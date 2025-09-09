@@ -35,92 +35,128 @@ const router = Router();
 /**
  * @swagger
  * /api/oauth/gmail/callback:
- *   post:
+ *   get:
  *     summary: Exchange Gmail OAuth code for tokens
  *     tags: [OAuth]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               code:
- *                 type: string
- *                 description: Gmail OAuth authorization code
- *                 example: "4/0AVMBsJihe9_Oo46ULtFcBv4llTw3vdtXKD_6n8pJNAvIEzni5WmqiG0_ct9z8XI6mo022g"
- *             required:
- *               - code
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Gmail OAuth authorization code
+ *       - in: query
+ *         name: error
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: OAuth error if any
  *     responses:
  *       200:
  *         description: OAuth tokens exchanged successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     access_token:
- *                       type: string
- *                     refresh_token:
- *                       type: string
- *                     expires_in:
- *                       type: number
+ *       400:
+ *         description: Missing code or OAuth error
  *       500:
  *         description: Failed to exchange code
  */
+router.get('/gmail/callback', async (req: Request, res: Response) => {
+  try {
+    const code = req.query.code as string | undefined;
+    const error = req.query.error as string | undefined;
+
+    if (error) {
+      return res.status(400).json({ success: false, error: `Google error: ${error}` });
+    }
+    if (!code) {
+      return res.status(400).json({ success: false, error: 'Authorization code is required' });
+    }
+
+    const params = new URLSearchParams();
+    params.append('code', code);
+    params.append('client_id', process.env.GMAIL_CLIENT_ID!);
+    params.append('client_secret', process.env.GMAIL_CLIENT_SECRET!);
+    params.append('redirect_uri', process.env.GMAIL_REDIRECT_URI!);
+    params.append('grant_type', 'authorization_code');
+
+    const tokenResp = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      params.toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const tokenData = tokenResp.data as GoogleTokenResponse;
+
+    if (!tokenData.access_token) {
+      console.error('Google token response without access_token:', tokenResp.data);
+      throw new Error('No access token received from Google');
+    }
+
+    const meResp = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+
+    const userData = meResp.data as GoogleUserResponse;
+
+    return res.json({
+      success: true,
+      data: {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_in: tokenData.expires_in,
+        email: userData.email
+      }
+    });
+  } catch (e: any) {
+    const msg = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || 'Token exchange failed');
+    console.error('Gmail OAuth error:', msg);
+    return res.status(500).json({ success: false, error: msg });
+  }
+});
+
+// Keep POST endpoint for frontend API calls
 router.post('/gmail/callback', async (req: Request, res: Response) => {
   const { code } = req.body;
 
   try {
-    const response = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        code,
-        client_id: process.env.GMAIL_CLIENT_ID!,
-        client_secret: process.env.GMAIL_CLIENT_SECRET!,
-        redirect_uri: process.env.GMAIL_REDIRECT_URI!,
-        grant_type: "authorization_code",
-      }),
-    });
+    const params = new URLSearchParams();
+    params.append('code', code);
+    params.append('client_id', process.env.GMAIL_CLIENT_ID!);
+    params.append('client_secret', process.env.GMAIL_CLIENT_SECRET!);
+    params.append('redirect_uri', process.env.GMAIL_REDIRECT_URI!);
+    params.append('grant_type', 'authorization_code');
 
-    const tokens = await response.json() as GoogleTokenResponse;
+    const tokenResp = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      params.toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const tokenData = tokenResp.data as GoogleTokenResponse;
     
-    if (!tokens.access_token) {
+    if (!tokenData.access_token) {
+      console.error('Google token response without access_token:', tokenResp.data);
       throw new Error('No access token received from Google');
     }
 
-    // Get user email using the access token
-    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: {
-        'Authorization': `Bearer ${tokens.access_token}`
-      }
+    const meResp = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
     });
     
-    const userInfo = await userResponse.json() as GoogleUserResponse;
+    const userData = meResp.data as GoogleUserResponse;
     
     res.json({
       success: true,
       data: {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_in: tokens.expires_in || 3600,
-        email: userInfo.email
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_in: tokenData.expires_in || 3600,
+        email: userData.email
       }
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ 
-      success: false,
-      error: err instanceof Error ? err.message : "Token exchange failed" 
-    });
+  } catch (e: any) {
+    const msg = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || 'Token exchange failed');
+    console.error('Gmail OAuth error:', msg);
+    res.status(500).json({ success: false, error: msg });
   }
 });
 
