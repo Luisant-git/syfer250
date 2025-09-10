@@ -52,6 +52,17 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
     return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=no_code');
   }
 
+  // Validate environment variables
+  if (!process.env.GMAIL_CLIENT_ID || !process.env.GMAIL_CLIENT_SECRET || !process.env.GMAIL_REDIRECT_URI) {
+    console.error('Missing Gmail OAuth environment variables');
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=missing_config');
+  }
+
+  if (state && !process.env.JWT_SECRET) {
+    console.error('JWT_SECRET required for state verification');
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=missing_jwt_secret');
+  }
+
   try {
     const response = await axios.post("https://oauth2.googleapis.com/token", 
       new URLSearchParams({
@@ -91,15 +102,20 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
       }
       
       if (userId) {
-        // Save sender to database
-        await prisma.sender.create({
-          data: {
-            name: userInfo.name || userInfo.email.split('@')[0],
-            email: userInfo.email,
-            isVerified: true,
-            userId: userId
-          }
-        });
+        try {
+          // Save sender to database
+          await prisma.sender.create({
+            data: {
+              name: userInfo.name || userInfo.email.split('@')[0],
+              email: userInfo.email,
+              isVerified: true,
+              userId: userId
+            }
+          });
+        } catch (dbError) {
+          console.error('Database error saving sender:', dbError);
+          // Continue with redirect even if DB save fails
+        }
       }
       
       // Redirect to frontend with success message
@@ -132,8 +148,17 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
     } else {
       res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_exchange_failed');
     }
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error('OAuth Error Details:', {
+      message: err instanceof Error ? err.message : 'Unknown error',
+      response: err.response?.data,
+      status: err.response?.status,
+      config: {
+        url: err.config?.url,
+        method: err.config?.method,
+        data: err.config?.data
+      }
+    });
     res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=oauth_failed');
   }
 });
