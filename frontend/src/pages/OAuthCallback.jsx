@@ -14,14 +14,34 @@ const OAuthCallback = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
+      const success = urlParams.get('success');
+      const email = urlParams.get('email');
       
-      if (error) {
-        showError('OAuth authorization was cancelled or failed');
+      // Handle backend redirect with success/error
+      if (success === 'gmail_connected' && email) {
+        showSuccess(`Gmail account (${decodeURIComponent(email)}) connected successfully!`);
         localStorage.removeItem('pendingProvider');
         setTimeout(() => navigate('/campaigns/new'), 2000);
+        setProcessing(false);
         return;
       }
       
+      if (error) {
+        const errorMessages = {
+          'no_code': 'No authorization code received',
+          'missing_config': 'Server configuration error',
+          'token_exchange_failed': 'Failed to exchange authorization code',
+          'token_verification_failed': 'Failed to verify OAuth token',
+          'oauth_failed': 'OAuth authentication failed'
+        };
+        showError(errorMessages[error] || 'OAuth authorization failed');
+        localStorage.removeItem('pendingProvider');
+        setTimeout(() => navigate('/campaigns/new'), 2000);
+        setProcessing(false);
+        return;
+      }
+      
+      // Fallback: Handle direct code exchange (for POST endpoints)
       if (code) {
         console.log('OAuth code received:', code);
         

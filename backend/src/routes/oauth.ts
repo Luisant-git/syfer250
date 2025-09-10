@@ -58,12 +58,8 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
     return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=missing_config');
   }
 
-  if (state && !process.env.JWT_SECRET) {
-    console.error('JWT_SECRET required for state verification');
-    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=missing_jwt_secret');
-  }
-
   try {
+    // Exchange code for tokens
     const response = await axios.post("https://oauth2.googleapis.com/token", 
       new URLSearchParams({
         code: code as string,
@@ -76,90 +72,101 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" }
       }
     );
-    console.log('Token response:', response.data);
-    
 
     const tokens = response.data as GoogleTokenResponse;
+    console.log('Token exchange successful');
 
-    console.log('Exchanged tokens:', tokens);
-    
     if (tokens.access_token) {
-      // Get user email
-      const userResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { 'Authorization': `Bearer ${tokens.access_token}` }
-      });
-      const userInfo = userResponse.data as GoogleUserResponse;
-      
-      // Extract userId from state parameter if present
-      let userId = null;
-      if (state) {
+      // ✅ FIRST: Verify token with OAuth2 userinfo endpoint
+      console.log('Verifying token with OAuth2 userinfo endpoint...');
+      try {
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { 
+            'Authorization': `Bearer ${tokens.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const userInfo = userInfoResponse.data as GoogleUserResponse;
+        console.log('User info verified:', userInfo.email);
+
+        // ✅ SECOND: Now try Gmail API (optional)
         try {
-          const decoded = jwt.verify(state as string, process.env.JWT_SECRET!) as any;
-          userId = decoded.userId;
-        } catch (error) {
-          console.log('Invalid state token');
-        }
-      }
-      
-      if (userId) {
-        try {
-          // Save sender to database
-          await prisma.sender.create({
-            data: {
-              name: userInfo.name || userInfo.email.split('@')[0],
-              email: userInfo.email,
-              isVerified: true,
-              userId: userId
+          const gmailProfileResponse = await axios.get('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
+            headers: { 
+              'Authorization': `Bearer ${tokens.access_token}`,
+              'Content-Type': 'application/json'
             }
           });
+          console.log('Gmail profile access successful');
+        } catch (gmailError: any) {
+          console.warn('Gmail API access failed (but OAuth succeeded):', gmailError.response?.data || gmailError.message);
+          // Continue anyway - OAuth succeeded even if Gmail API has issues
+        }
+
+        // Extract userId from state parameter if present
+        let userId = null;
+        if (state && process.env.JWT_SECRET) {
+          try {
+            const decoded = jwt.verify(state as string, process.env.JWT_SECRET!) as any;
+            userId = decoded.userId;
+          } catch (error) {
+            console.log('Invalid state token');
+          }
+        }
+        
+        // Always save sender when OAuth succeeds (user initiated the connection)
+        try {
+          // Check if sender already exists
+          const existingSender = await prisma.sender.findFirst({
+            where: {
+              email: userInfo.email,
+              ...(userId && { userId: userId })
+            }
+          });
+          
+          if (!existingSender) {
+            await prisma.sender.create({
+              data: {
+                name: userInfo.name || userInfo.email.split('@')[0],
+                email: userInfo.email,
+                isVerified: true,
+                ...(userId && { userId: userId })
+              }
+            });
+            console.log('Sender saved to database');
+          } else {
+            console.log('Sender already exists in database');
+          }
         } catch (dbError) {
           console.error('Database error saving sender:', dbError);
           // Continue with redirect even if DB save fails
         }
+        
+        // Redirect to frontend with success message
+        const encodedEmail = encodeURIComponent(userInfo.email);
+        const redirectUrl = `https://campaign.shoppingsto.com/campaigns/new?success=gmail_connected&email=${encodedEmail}`;
+        
+        return res.redirect(redirectUrl);
+        
+      } catch (userInfoError: any) {
+        console.error('OAuth token verification failed:', {
+          status: userInfoError.response?.status,
+          data: userInfoError.response?.data,
+          message: userInfoError.message
+        });
+        return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_verification_failed');
       }
-      
-      // Redirect to frontend with success message
-      const encodedEmail = encodeURIComponent(userInfo.email);
-      const redirectUrl = `https://campaign.shoppingsto.com/campaigns/new?success=gmail_connected&email=${encodedEmail}`;
-      console.log('Attempting redirect to:', redirectUrl);
-      console.log('Response headers before redirect:', res.getHeaders());
-      console.log('Response headersSent:', res.headersSent);
-      
-      if (res.headersSent) {
-        console.error('Cannot redirect - headers already sent');
-        return;
-      }
-      
-      // Try server redirect first
-      res.redirect(redirectUrl);
-      console.log('Redirect called successfully');
-      
-      // Fallback: If server redirect fails, send HTML with client-side redirect
-      // Uncomment the lines below if server redirect doesn't work:
-      // res.send(`
-      //   <html>
-      //     <head><title>Redirecting...</title></head>
-      //     <body>
-      //       <script>window.location.href = '${redirectUrl}';</script>
-      //       <p>If you are not redirected, <a href="${redirectUrl}">click here</a></p>
-      //     </body>
-      //   </html>
-      // `);
     } else {
-      res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_exchange_failed');
+      return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_exchange_failed');
     }
   } catch (err: any) {
-    console.error('OAuth Error Details:', {
-      message: err instanceof Error ? err.message : 'Unknown error',
-      response: err.response?.data,
+    console.error('OAuth Token Exchange Error:', {
+      message: err.message,
       status: err.response?.status,
-      config: {
-        url: err.config?.url,
-        method: err.config?.method,
-        data: err.config?.data
-      }
+      data: err.response?.data
     });
-    res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=oauth_failed');
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=oauth_failed');
   }
 });
 

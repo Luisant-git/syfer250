@@ -6,7 +6,7 @@ const OUTLOOK_REDIRECT_URI = import.meta.env.VITE_OUTLOOK_REDIRECT_URI;
 class OAuthService {
   // Gmail OAuth
   initiateGmailAuth() {
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+    const scope = 'openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${GMAIL_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(GMAIL_REDIRECT_URI)}&` +
