@@ -161,20 +161,7 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
     clientIdMatch: process.env.GMAIL_CLIENT_ID === '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com'
   });
 
-  console.log('Creating Gmail transporter with OAuth2...');
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      type: 'OAuth2',
-      user: sender.email,
-      clientId: process.env.GMAIL_CLIENT_ID,
-      clientSecret: process.env.GMAIL_CLIENT_SECRET,
-      refreshToken: sender.refreshToken,
-      accessToken: accessToken,
-    },
-  });
-  
-  console.log('Gmail transporter created successfully');
+  console.log('Using Gmail API instead of SMTP for better OAuth compatibility...');
 
   console.log(`Starting to send to ${campaign.recipients.length} recipients`);
   
@@ -197,18 +184,40 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         .replace(/\r\n/g, '<br>')
         .replace(/\r/g, '<br>');
 
-      console.log(`Sending email via Gmail OAuth to: ${recipient.email}`);
+      console.log(`Sending email via Gmail API to: ${recipient.email}`);
       
-      const result = await transporter.sendMail({
-        from: `"${sender.name}" <${sender.email}>`,
-        to: recipient.email,
-        subject: personalizedSubject,
-        html: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${htmlContent}</div>`,
-      });
+      // Create email message in RFC 2822 format
+      const emailMessage = [
+        `From: "${sender.name}" <${sender.email}>`,
+        `To: ${recipient.email}`,
+        `Subject: ${personalizedSubject}`,
+        'Content-Type: text/html; charset=utf-8',
+        '',
+        `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${htmlContent}</div>`
+      ].join('\r\n');
+      
+      // Encode message in base64url format
+      const encodedMessage = Buffer.from(emailMessage)
+        .toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+      
+      // Send via Gmail API
+      const result = await axios.post(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+        { raw: encodedMessage },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       
       console.log(`Email sent successfully to ${recipient.email}:`, {
-        messageId: result.messageId,
-        response: result.response
+        messageId: result.data.id,
+        threadId: result.data.threadId
       });
 
       await prisma.recipient.update({
