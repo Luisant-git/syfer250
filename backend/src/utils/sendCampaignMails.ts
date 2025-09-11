@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import axios from 'axios';
 import { prisma } from '../config/database';
 
 // Function to replace template variables with recipient data
@@ -112,9 +113,35 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
     isExpired: now > expiresAt
   });
   
-  if (sender.expiresAt && now > expiresAt) {
-    console.log('Access token expired, need to refresh...');
-    console.error('Token refresh not implemented yet - emails will fail');
+  // Always try to refresh token if we have a refresh token (Google tokens can be invalid even before expiry)
+  if (sender.refreshToken) {
+    console.log('Refreshing access token...');
+    try {
+      const refreshResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        client_id: process.env.GMAIL_CLIENT_ID,
+        client_secret: process.env.GMAIL_CLIENT_SECRET,
+        refresh_token: sender.refreshToken,
+        grant_type: 'refresh_token'
+      });
+      
+      if (refreshResponse.data.access_token) {
+        accessToken = refreshResponse.data.access_token;
+        console.log('Token refreshed successfully');
+        
+        // Update token in database
+        const newExpiresAt = new Date(Date.now() + (refreshResponse.data.expires_in * 1000));
+        await prisma.sender.update({
+          where: { id: sender.id },
+          data: {
+            accessToken: accessToken,
+            expiresAt: newExpiresAt
+          }
+        });
+        console.log('Updated token in database');
+      }
+    } catch (refreshError: any) {
+      console.error('Token refresh failed:', refreshError.response?.data || refreshError.message);
+    }
   }
 
   console.log('OAuth config:', {
