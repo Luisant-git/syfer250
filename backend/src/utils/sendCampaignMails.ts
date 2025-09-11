@@ -215,9 +215,10 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         }
       );
       
+      const responseData = result.data as any;
       console.log(`Email sent successfully to ${recipient.email}:`, {
-        messageId: result.data.id,
-        threadId: result.data.threadId
+        messageId: responseData.id,
+        threadId: responseData.threadId
       });
 
       await prisma.recipient.update({
