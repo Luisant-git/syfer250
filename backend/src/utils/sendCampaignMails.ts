@@ -124,12 +124,13 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         grant_type: 'refresh_token'
       });
       
-      if (refreshResponse.data.access_token) {
-        accessToken = refreshResponse.data.access_token;
+      const tokenData = refreshResponse.data as any;
+      if (tokenData.access_token) {
+        accessToken = tokenData.access_token;
         console.log('Token refreshed successfully');
         
         // Update token in database
-        const newExpiresAt = new Date(Date.now() + (refreshResponse.data.expires_in * 1000));
+        const newExpiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
         await prisma.sender.update({
           where: { id: sender.id },
           data: {
