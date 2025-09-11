@@ -103,10 +103,26 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
 
   // Check if access token is expired and refresh if needed
   let accessToken = sender.accessToken;
-  if (sender.expiresAt && new Date() > new Date(sender.expiresAt)) {
-    console.log('Access token expired, refreshing...');
-    // You'll need to implement token refresh logic here
+  const now = new Date();
+  const expiresAt = new Date(sender.expiresAt);
+  
+  console.log('Token expiry check:', {
+    now: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+    isExpired: now > expiresAt
+  });
+  
+  if (sender.expiresAt && now > expiresAt) {
+    console.log('Access token expired, need to refresh...');
+    console.error('Token refresh not implemented yet - emails will fail');
   }
+
+  console.log('OAuth config:', {
+    clientId: process.env.GMAIL_CLIENT_ID ? 'Present' : 'Missing',
+    clientSecret: process.env.GMAIL_CLIENT_SECRET ? 'Present' : 'Missing',
+    hasRefreshToken: !!sender.refreshToken,
+    hasAccessToken: !!accessToken
+  });
 
   console.log('Creating Gmail transporter with OAuth2...');
   const transporter = nodemailer.createTransport({
