@@ -104,43 +104,50 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
           // Continue anyway - OAuth succeeded even if Gmail API has issues
         }
 
-        // Extract userId from state parameter if present
+        // Extract userId from JWT token in state parameter
         let userId = null;
+        
         if (state && process.env.JWT_SECRET) {
           try {
-            const decoded = jwt.verify(state as string, process.env.JWT_SECRET!) as any;
-            userId = decoded.userId;
+            const decodedState = decodeURIComponent(state as string);
+            const decoded = jwt.verify(decodedState, process.env.JWT_SECRET!) as any;
+            userId = decoded.id; // Based on your JWT payload structure
+            console.log('User ID from state JWT:', userId);
           } catch (error) {
-            console.log('Invalid state token');
+            console.log('Invalid JWT token in state parameter:', error);
           }
         }
         
-        // Always save sender when OAuth succeeds (user initiated the connection)
-        try {
-          // Check if sender already exists
-          const existingSender = await prisma.sender.findFirst({
-            where: {
-              email: userInfo.email,
-              ...(userId && { userId: userId })
-            }
-          });
-          
-          if (!existingSender) {
-            await prisma.sender.create({
-              data: {
-                name: userInfo.name || userInfo.email.split('@')[0],
+        // Save sender when OAuth succeeds (requires userId)
+        if (userId) {
+          try {
+            // Check if sender already exists for this user
+            const existingSender = await prisma.sender.findFirst({
+              where: {
                 email: userInfo.email,
-                isVerified: true,
-                ...(userId && { userId: userId })
+                userId: userId
               }
             });
-            console.log('Sender saved to database');
-          } else {
-            console.log('Sender already exists in database');
+            
+            if (!existingSender) {
+              await prisma.sender.create({
+                data: {
+                  name: userInfo.name || userInfo.email.split('@')[0],
+                  email: userInfo.email,
+                  isVerified: true,
+                  userId: userId
+                }
+              });
+              console.log('Sender saved to database');
+            } else {
+              console.log('Sender already exists in database');
+            }
+          } catch (dbError) {
+            console.error('Database error saving sender:', dbError);
+            // Continue with redirect even if DB save fails
           }
-        } catch (dbError) {
-          console.error('Database error saving sender:', dbError);
-          // Continue with redirect even if DB save fails
+        } else {
+          console.log('No userId found - sender not saved to database');
         }
         
         // Redirect to frontend with success message

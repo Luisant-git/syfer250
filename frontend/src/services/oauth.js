@@ -7,13 +7,17 @@ class OAuthService {
   // Gmail OAuth
   initiateGmailAuth() {
     const scope = 'openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+    const token = localStorage.getItem('token');
+    const state = token ? encodeURIComponent(token) : '';
+    
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${GMAIL_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(GMAIL_REDIRECT_URI)}&` +
       `scope=${encodeURIComponent(scope)}&` +
       `response_type=code&` +
       `access_type=offline&` +
-      `prompt=consent`;
+      `prompt=consent` +
+      (state ? `&state=${state}` : '');
     
     window.location.href = authUrl;
   }
