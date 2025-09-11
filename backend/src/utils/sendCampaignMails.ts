@@ -118,10 +118,19 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
   }
 
   console.log('OAuth config:', {
-    clientId: process.env.GMAIL_CLIENT_ID ? 'Present' : 'Missing',
-    clientSecret: process.env.GMAIL_CLIENT_SECRET ? 'Present' : 'Missing',
+    clientId: process.env.GMAIL_CLIENT_ID ? `${process.env.GMAIL_CLIENT_ID.substring(0, 20)}...` : 'Missing',
+    clientSecret: process.env.GMAIL_CLIENT_SECRET ? `${process.env.GMAIL_CLIENT_SECRET.substring(0, 10)}...` : 'Missing',
     hasRefreshToken: !!sender.refreshToken,
-    hasAccessToken: !!accessToken
+    hasAccessToken: !!accessToken,
+    refreshTokenLength: sender.refreshToken?.length || 0,
+    accessTokenLength: accessToken?.length || 0
+  });
+  
+  // Check if credentials match what was used during OAuth
+  console.log('Credential validation:', {
+    storedClientId: process.env.GMAIL_CLIENT_ID,
+    expectedClientId: '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com',
+    clientIdMatch: process.env.GMAIL_CLIENT_ID === '1072370452711-3tgkvl5g3ejrspefsod180k5oddrcum3.apps.googleusercontent.com'
   });
 
   console.log('Creating Gmail transporter with OAuth2...');
