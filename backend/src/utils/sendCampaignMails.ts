@@ -85,12 +85,21 @@ export const sendCampaignMails = async (campaign: any) => {
 };
 
 export const sendCampaignMailsGoogle = async (campaign: any) => {
+  console.log('Starting Gmail campaign send for campaign:', campaign.id);
+  
   if (!campaign.sender) {
     console.error("No sender configured for this campaign.");
     return;
   }
 
   const sender = campaign.sender;
+  console.log('Sender details:', {
+    email: sender.email,
+    name: sender.name,
+    hasAccessToken: !!sender.accessToken,
+    hasRefreshToken: !!sender.refreshToken,
+    expiresAt: sender.expiresAt
+  });
 
   // Check if access token is expired and refresh if needed
   let accessToken = sender.accessToken;
@@ -99,6 +108,7 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
     // You'll need to implement token refresh logic here
   }
 
+  console.log('Creating Gmail transporter with OAuth2...');
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -110,12 +120,23 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
       accessToken: accessToken,
     },
   });
+  
+  console.log('Gmail transporter created successfully');
 
+  console.log(`Starting to send to ${campaign.recipients.length} recipients`);
+  
   for (const recipient of campaign.recipients) {
+    console.log(`Attempting to send email to: ${recipient.email}`);
+    
     try {
       // Replace template variables with recipient data
       const personalizedSubject = replaceTemplateVariables(campaign.subject, recipient);
       const personalizedContent = replaceTemplateVariables(campaign.content, recipient);
+
+      console.log(`Personalized content for ${recipient.email}:`, {
+        subject: personalizedSubject,
+        contentLength: personalizedContent.length
+      });
 
       // Convert plain text to HTML with proper formatting
       const htmlContent = personalizedContent
@@ -123,11 +144,18 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         .replace(/\r\n/g, '<br>')
         .replace(/\r/g, '<br>');
 
-      await transporter.sendMail({
+      console.log(`Sending email via Gmail OAuth to: ${recipient.email}`);
+      
+      const result = await transporter.sendMail({
         from: `"${sender.name}" <${sender.email}>`,
         to: recipient.email,
         subject: personalizedSubject,
         html: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${htmlContent}</div>`,
+      });
+      
+      console.log(`Email sent successfully to ${recipient.email}:`, {
+        messageId: result.messageId,
+        response: result.response
       });
 
       await prisma.recipient.update({
@@ -139,8 +167,18 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         where: { campaignId: campaign.id },
         data: { totalSent: { increment: 1 } },
       });
-    } catch (err) {
-      console.error(`Failed to send to ${recipient.email}:`, err);
+      
+      console.log(`Database updated for successful send to: ${recipient.email}`);
+      
+    } catch (err: any) {
+      console.error(`Failed to send to ${recipient.email}:`, {
+        error: err.message,
+        code: err.code,
+        command: err.command,
+        response: err.response,
+        responseCode: err.responseCode,
+        stack: err.stack
+      });
 
       await prisma.recipient.update({
         where: { id: recipient.id },
@@ -151,6 +189,10 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
         where: { campaignId: campaign.id },
         data: { totalBounced: { increment: 1 } },
       });
+      
+      console.log(`Database updated for failed send to: ${recipient.email}`);
     }
   }
+  
+  console.log('Gmail campaign send completed');
 };

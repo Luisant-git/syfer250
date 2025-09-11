@@ -69,8 +69,10 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
     // 🚀 Send emails if "now"
     if (campaign.sender?.provider === "gmail") {
       await sendCampaignMailsGoogle(campaign);
+      console.log('Using Gmail OAuth sending function');
     } else {
       await sendCampaignMails(campaign);
+      console.log('Using SMTP sending function');
     }
 
     res.status(201).json({ success: true, data: campaign });
