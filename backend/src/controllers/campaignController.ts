@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
-import { sendCampaignMails } from "../utils/sendCampaignMails";
+import { sendCampaignMails, sendCampaignMailsGoogle } from "../utils/sendCampaignMails";
 
 interface AuthRequest extends Request {
   user?: {
@@ -67,7 +67,9 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
     });
 
     // 🚀 Send emails if "now"
-    if (status === "SENT") {
+    if (campaign.sender?.provider === "gmail") {
+      await sendCampaignMailsGoogle(campaign);
+    } else {
       await sendCampaignMails(campaign);
     }
 

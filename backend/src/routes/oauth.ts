@@ -130,17 +130,35 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
             });
             
             if (!existingSender) {
+              const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
+              
               await prisma.sender.create({
                 data: {
                   name: userInfo.name || userInfo.email.split('@')[0],
                   email: userInfo.email,
                   isVerified: true,
+                  provider: 'gmail',
+                  accessToken: tokens.access_token,
+                  refreshToken: tokens.refresh_token,
+                  expiresAt: expiresAt,
                   userId: userId
                 }
               });
               console.log('Sender saved to database');
             } else {
-              console.log('Sender already exists in database');
+              // Update existing sender with new tokens
+              const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
+              
+              await prisma.sender.update({
+                where: { id: existingSender.id },
+                data: {
+                  accessToken: tokens.access_token,
+                  refreshToken: tokens.refresh_token,
+                  expiresAt: expiresAt,
+                  isVerified: true
+                }
+              });
+              console.log('Sender tokens updated in database');
             }
           } catch (dbError) {
             console.error('Database error saving sender:', dbError);
