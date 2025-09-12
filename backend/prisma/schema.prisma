@@ -59,10 +59,12 @@ model Sender {
   port      Int?
   isVerified Boolean   @default(false)
   userId    String
-  provider     String?    @default("gmail") // "smtp" or "gmail" or "outlook"
+  provider     String?    @default("outlook") // "smtp" or "gmail" or "outlook"
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?
+  tenantId     String?
+  scope        String?    // OAuth scopes (e.g., "Mail.Send")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   user      User       @relation(fields: [userId], references: [id])

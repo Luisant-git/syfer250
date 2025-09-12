@@ -195,6 +195,137 @@ router.get('/gmail/callback', async (req: Request, res: Response) => {
   }
 });
 
+// GET endpoint for Outlook OAuth redirect
+router.get('/outlook/callback', async (req: Request, res: Response) => {
+  const { code, state } = req.query;
+  console.log('Outlook STATE', state);
+
+  if (!code) {
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=no_code');
+  }
+
+  if (!process.env.OUTLOOK_CLIENT_ID || !process.env.OUTLOOK_CLIENT_SECRET || !process.env.OUTLOOK_REDIRECT_URI) {
+    console.error('Missing Outlook OAuth environment variables');
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=missing_config');
+  }
+
+  try {
+    const response = await axios.post(`https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`, 
+      new URLSearchParams({
+        code: code as string,
+        client_id: process.env.OUTLOOK_CLIENT_ID!,
+        client_secret: process.env.OUTLOOK_CLIENT_SECRET!,
+        redirect_uri: process.env.OUTLOOK_REDIRECT_URI!,
+        grant_type: "authorization_code",
+        scope: process.env.OUTLOOK_SCOPES!
+      }).toString(),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      }
+    );
+
+    const tokens = response.data as MicrosoftTokenResponse;
+    console.log('Outlook token exchange successful');
+
+    if (tokens.access_token) {
+      console.log('Verifying token with Microsoft Graph API...');
+      try {
+        const userInfoResponse = await axios.get('https://graph.microsoft.com/v1.0/me', {
+          headers: { 
+            'Authorization': `Bearer ${tokens.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const userInfo = userInfoResponse.data as MicrosoftUserResponse;
+        const userEmail = userInfo.mail || userInfo.userPrincipalName;
+        console.log('Outlook user info verified:', userEmail);
+
+        let userId = null;
+        
+        if (state && process.env.JWT_SECRET) {
+          try {
+            const decodedState = decodeURIComponent(state as string);
+            const decoded = jwt.verify(decodedState, process.env.JWT_SECRET!) as any;
+            userId = decoded.id;
+            console.log('User ID from state JWT:', userId);
+          } catch (error) {
+            console.log('Invalid JWT token in state parameter:', error);
+          }
+        }
+        
+        if (userId) {
+          try {
+            const existingSender = await prisma.sender.findFirst({
+              where: {
+                email: userEmail,
+                userId: userId
+              }
+            });
+            
+            if (!existingSender) {
+              const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
+              
+              await prisma.sender.create({
+                data: {
+                  name: userEmail.split('@')[0],
+                  email: userEmail,
+                  isVerified: true,
+                  provider: 'outlook',
+                  accessToken: tokens.access_token,
+                  refreshToken: tokens.refresh_token,
+                  expiresAt: expiresAt,
+                  userId: userId
+                }
+              });
+              console.log('Outlook sender saved to database');
+            } else {
+              const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000));
+              
+              await prisma.sender.update({
+                where: { id: existingSender.id },
+                data: {
+                  accessToken: tokens.access_token,
+                  refreshToken: tokens.refresh_token,
+                  expiresAt: expiresAt,
+                  isVerified: true
+                }
+              });
+              console.log('Outlook sender tokens updated in database');
+            }
+          } catch (dbError) {
+            console.error('Database error saving Outlook sender:', dbError);
+          }
+        } else {
+          console.log('No userId found - Outlook sender not saved to database');
+        }
+        
+        const encodedEmail = encodeURIComponent(userEmail);
+        const redirectUrl = `https://campaign.shoppingsto.com/campaigns/new?success=outlook_connected&email=${encodedEmail}`;
+        
+        return res.redirect(redirectUrl);
+        
+      } catch (userInfoError: any) {
+        console.error('Outlook token verification failed:', {
+          status: userInfoError.response?.status,
+          data: userInfoError.response?.data,
+          message: userInfoError.message
+        });
+        return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_verification_failed');
+      }
+    } else {
+      return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=token_exchange_failed');
+    }
+  } catch (err: any) {
+    console.error('Outlook OAuth Token Exchange Error:', {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data
+    });
+    return res.redirect('https://campaign.shoppingsto.com/campaigns/new?error=oauth_failed');
+  }
+});
+
 // POST endpoint for Gmail OAuth (keep for backward compatibility)
 router.post('/gmail/callback', async (req: Request, res: Response) => {
   const { code } = req.body;
