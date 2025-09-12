@@ -210,7 +210,7 @@ router.get('/outlook/callback', async (req: Request, res: Response) => {
   }
 
   try {
-    const response = await axios.post(`https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`, 
+    const response = await axios.post(`https://login.microsoftonline.com/common/oauth2/v2.0/token`, 
       new URLSearchParams({
         code: code as string,
         client_id: process.env.OUTLOOK_CLIENT_ID!,
