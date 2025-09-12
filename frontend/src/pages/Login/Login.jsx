@@ -50,15 +50,15 @@ const LoginPage = () => {
           <span className="logo-name">Syfer250</span>
         </div>
         <div className="signup-prompt">
-          <span className="new-to-text text-danger">New to Syfer250? </span>
+          <span className="new-to-text">New to Syfer250? </span>
 
-          <a href="/signup" className="text-danger">Sign up</a>
+          <a href="/signup">Sign up</a>
         </div>
       </header>
 
       <main className="login-main">
         <div className="login-container">
-          <h1 className="login-title text-danger">Sign in to Syfer250</h1>
+          <h1 className="login-title text-primary">Sign in to Syfer250</h1>
           <p className="login-subtitle">
             Always land in your lead's inbox with unlimited sender accounts, so
             you can focus on closing deals.
