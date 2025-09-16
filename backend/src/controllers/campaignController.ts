@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
-import { sendCampaignMails, sendCampaignMailsGoogle } from "../utils/sendCampaignMails";
+import { sendCampaignMails, sendCampaignMailsGoogle, sendCampaignMailsOutlook } from "../utils/sendCampaignMails";
 
 interface AuthRequest extends Request {
   user?: {
@@ -70,6 +70,9 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
     if (campaign.sender?.provider === "gmail") {
       await sendCampaignMailsGoogle(campaign);
       console.log('Using Gmail OAuth sending function');
+    } else if (campaign.sender?.provider === "outlook") {
+      await sendCampaignMailsOutlook(campaign);
+      console.log('Using Outlook OAuth sending function');
     } else {
       await sendCampaignMails(campaign);
       console.log('Using SMTP sending function');

@@ -259,3 +259,128 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
   
   console.log('Gmail campaign send completed');
 };
+
+export const sendCampaignMailsOutlook = async (campaign: any) => {
+  console.log('Starting Outlook campaign send for campaign:', campaign.id);
+  
+  if (!campaign.sender) {
+    console.error("No sender configured for this campaign.");
+    return;
+  }
+
+  const sender = campaign.sender;
+  console.log('Sender details:', {
+    email: sender.email,
+    name: sender.name,
+    hasAccessToken: !!sender.accessToken,
+    expiresAt: sender.expiresAt
+  });
+
+  let accessToken = sender.accessToken;
+  const now = new Date();
+  const expiresAt = new Date(sender.expiresAt);
+  
+  if (now > expiresAt && sender.refreshToken) {
+    console.log('Refreshing Outlook access token...');
+    try {
+      const refreshResponse = await axios.post(
+        'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        new URLSearchParams({
+          client_id: process.env.OUTLOOK_CLIENT_ID!,
+          client_secret: process.env.OUTLOOK_CLIENT_SECRET!,
+          refresh_token: sender.refreshToken,
+          grant_type: 'refresh_token'
+        }).toString(),
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        }
+      );
+      
+      const tokenData = refreshResponse.data as any;
+      if (tokenData.access_token) {
+        accessToken = tokenData.access_token;
+        console.log('Outlook token refreshed successfully');
+        
+        const newExpiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
+        await prisma.sender.update({
+          where: { id: sender.id },
+          data: {
+            accessToken: accessToken,
+            expiresAt: newExpiresAt
+          }
+        });
+      }
+    } catch (refreshError: any) {
+      console.error('Outlook token refresh failed:', refreshError.response?.data || refreshError.message);
+    }
+  }
+
+  console.log(`Starting to send to ${campaign.recipients.length} recipients via Outlook`);
+  
+  for (const recipient of campaign.recipients) {
+    console.log(`Attempting to send email to: ${recipient.email}`);
+    
+    try {
+      const personalizedSubject = replaceTemplateVariables(campaign.subject, recipient);
+      const personalizedContent = replaceTemplateVariables(campaign.content, recipient);
+
+      const htmlContent = personalizedContent
+        .replace(/\n/g, '<br>')
+        .replace(/\r\n/g, '<br>')
+        .replace(/\r/g, '<br>');
+
+      const emailMessage = {
+        message: {
+          subject: personalizedSubject,
+          body: {
+            contentType: 'HTML',
+            content: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">${htmlContent}</div>`
+          },
+          toRecipients: [{
+            emailAddress: {
+              address: recipient.email
+            }
+          }]
+        }
+      };
+      
+      const result = await axios.post(
+        'https://graph.microsoft.com/v1.0/me/sendMail',
+        emailMessage,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log(`Email sent successfully to ${recipient.email}`);
+
+      await prisma.recipient.update({
+        where: { id: recipient.id },
+        data: { status: "SENT", sentAt: new Date() },
+      });
+
+      await prisma.analytics.update({
+        where: { campaignId: campaign.id },
+        data: { totalSent: { increment: 1 } },
+      });
+      
+    } catch (err: any) {
+      console.error(`Failed to send to ${recipient.email}:`, err.response?.data || err.message);
+
+      await prisma.recipient.update({
+        where: { id: recipient.id },
+        data: { status: "FAILED" },
+      });
+
+      await prisma.analytics.update({
+        where: { campaignId: campaign.id },
+        data: { totalBounced: { increment: 1 } },
+      });
+    }
+  }
+  
+  console.log('Outlook campaign send completed');
+};
