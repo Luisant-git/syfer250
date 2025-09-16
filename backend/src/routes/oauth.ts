@@ -268,6 +268,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
     const tokens = response.data as MicrosoftTokenResponse;
     console.log("Outlook token exchange successful");
     console.log("Token response keys:", Object.keys(tokens));
+    console.log("Has refresh_token:", !!tokens.refresh_token);
 
     if (tokens.access_token) {
       console.log("Verifying token with Microsoft Graph API...");
@@ -324,7 +325,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
                   isVerified: true,
                   provider: "outlook",
                   accessToken: tokens.access_token,
-                  refreshToken: tokens.refresh_token,
+                  refreshToken: tokens.refresh_token || null,
                   expiresAt: expiresAt,
                   userId: userId,
                 },
@@ -337,7 +338,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
                 where: { id: existingSender.id },
                 data: {
                   accessToken: tokens.access_token,
-                  refreshToken: tokens.refresh_token,
+                  refreshToken: tokens.refresh_token || existingSender.refreshToken,
                   expiresAt: expiresAt,
                   isVerified: true,
                 },

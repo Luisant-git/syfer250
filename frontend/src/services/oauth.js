@@ -25,12 +25,17 @@ class OAuthService {
   // Outlook OAuth
   initiateOutlookAuth() {
     const scope = 'https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send https://graph.microsoft.com/user.read';
+
+    const token = localStorage.getItem('token');
+    const state = token ? encodeURIComponent(token) : '';
+
     const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
       `client_id=${OUTLOOK_CLIENT_ID}&` +
       `response_type=code&` +
       `redirect_uri=${encodeURIComponent(OUTLOOK_REDIRECT_URI)}&` +
       `scope=${encodeURIComponent(scope)}&` +
-      `response_mode=query`;
+      `response_mode=query` +
+      (state ? `&state=${state}` : '');
     
     window.location.href = authUrl;
   }
