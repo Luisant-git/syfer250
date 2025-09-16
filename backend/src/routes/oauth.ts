@@ -224,7 +224,9 @@ router.get("/gmail/callback", async (req: Request, res: Response) => {
 // GET endpoint for Outlook OAuth redirect
 router.get("/outlook/callback", async (req: Request, res: Response) => {
   const { code, state } = req.query;
-  console.log("Outlook STATE", state);
+  console.log("Outlook callback received - code:", code ? "present" : "missing");
+  console.log("Outlook STATE:", state);
+  console.log("Full query params:", req.query);
 
   if (!code) {
     return res.redirect(
@@ -244,16 +246,20 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
   }
 
   try {
+    console.log("Attempting Outlook token exchange...");
+    const tokenParams = {
+      code: code as string,
+      client_id: process.env.OUTLOOK_CLIENT_ID!,
+      client_secret: process.env.OUTLOOK_CLIENT_SECRET!,
+      redirect_uri: process.env.OUTLOOK_REDIRECT_URI!,
+      grant_type: "authorization_code",
+      scope: process.env.OUTLOOK_SCOPES!,
+    };
+    console.log("Token exchange params:", { ...tokenParams, client_secret: "[HIDDEN]" });
+    
     const response = await axios.post(
       `https://login.microsoftonline.com/common/oauth2/v2.0/token`,
-      new URLSearchParams({
-        code: code as string,
-        client_id: process.env.OUTLOOK_CLIENT_ID!,
-        client_secret: process.env.OUTLOOK_CLIENT_SECRET!,
-        redirect_uri: process.env.OUTLOOK_REDIRECT_URI!,
-        grant_type: "authorization_code",
-        scope: process.env.OUTLOOK_SCOPES!,
-      }).toString(),
+      new URLSearchParams(tokenParams).toString(),
       {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       }
@@ -261,6 +267,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
 
     const tokens = response.data as MicrosoftTokenResponse;
     console.log("Outlook token exchange successful");
+    console.log("Token response keys:", Object.keys(tokens));
 
     if (tokens.access_token) {
       console.log("Verifying token with Microsoft Graph API...");
@@ -278,6 +285,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
         const userInfo = userInfoResponse.data as MicrosoftUserResponse;
         const userEmail = userInfo.mail || userInfo.userPrincipalName;
         console.log("Outlook user info verified:", userEmail);
+        console.log("User info object keys:", Object.keys(userInfo));
 
         let userId = null;
 
@@ -293,6 +301,8 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
           } catch (error) {
             console.log("Invalid JWT token in state parameter:", error);
           }
+        } else {
+          console.log("No state parameter or JWT_SECRET found");
         }
 
         if (userId) {
@@ -343,6 +353,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
 
         const encodedEmail = encodeURIComponent(userEmail);
         const redirectUrl = `https://campaign.shoppingsto.com/campaigns/new?success=outlook_connected&email=${encodedEmail}`;
+        console.log("Redirecting to:", redirectUrl);
 
         return res.redirect(redirectUrl);
       } catch (userInfoError: any) {
