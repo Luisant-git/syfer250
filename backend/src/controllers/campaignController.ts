@@ -67,10 +67,10 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
     });
 
     // 🚀 Send emails if "now"
-    if (campaign.sender?.provider === "gmail") {
+    if (campaign.sender?.provider === "GMAIL") {
       await sendCampaignMailsGoogle(campaign);
       console.log('Using Gmail OAuth sending function');
-    } else if (campaign.sender?.provider === "outlook") {
+    } else if (campaign.sender?.provider === "OUTLOOK") {
       await sendCampaignMailsOutlook(campaign);
       console.log('Using Outlook OAuth sending function');
     } else {
