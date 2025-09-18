@@ -59,7 +59,7 @@ model Sender {
   port      Int?
   isVerified Boolean   @default(false)
   userId    String
-  provider     String?    @default("outlook") // "smtp" or "gmail" or "outlook"
+  provider     EmailProvider @default(OUTLOOK)
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?
@@ -164,4 +164,10 @@ enum RecipientStatus {
   BOUNCED
   UNSUBSCRIBED
   FAILED
+}
+
+enum EmailProvider {
+  SMTP
+  GMAIL
+  OUTLOOK
 }

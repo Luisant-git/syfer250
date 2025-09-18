@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Mail, Shield, AlertCircle, CheckCircle, Settings, User, Building, Edit, Trash2 } from 'lucide-react';
 import Button from '../../../components/UI/Button/Button';
+import ProviderBadge from '../../../components/ProviderBadge';
 import apiService from '../../../services/api';
 import oauthService from '../../../services/oauth';
 import useToast from '../../../hooks/useToast';
@@ -116,7 +117,12 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
         if (response.success) {
           const senderData = {
             name: response.data.email.split('@')[0],
-            email: response.data.email
+            email: response.data.email,
+            provider: 'GMAIL',
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+            expiresAt: response.data.expiresAt,
+            scope: response.data.scope
           };
           const senderResponse = await apiService.createSender(senderData);
           if (senderResponse.success) {
@@ -129,7 +135,13 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
         if (response.success) {
           const senderData = {
             name: response.data.email.split('@')[0],
-            email: response.data.email
+            email: response.data.email,
+            provider: 'OUTLOOK',
+            accessToken: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+            expiresAt: response.data.expiresAt,
+            tenantId: response.data.tenantId,
+            scope: response.data.scope
           };
           const senderResponse = await apiService.createSender(senderData);
           if (senderResponse.success) {
@@ -350,6 +362,14 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                 )}
               </div>
               <div style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>{sender.email}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <ProviderBadge provider={sender.provider || 'OUTLOOK'} />
+                {sender.host && (
+                  <span style={{ fontSize: '0.75rem', color: '#666' }}>
+                    {sender.host}:{sender.port}
+                  </span>
+                )}
+              </div>
               {sender.organization && (
                 <div style={{ color: '#666', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <Building size={12} />
@@ -616,6 +636,7 @@ onClick={async () => {
                       password: smtpConfig.password,
                       host: smtpConfig.host,
                       port: smtpConfig.port,
+                      provider: 'SMTP',
                       isVerified: smtpConfig.secure
                     };
                     

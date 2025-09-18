@@ -10,7 +10,7 @@ interface AuthRequest extends Request {
 
 export const createSender = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, email, password, host, port, isVerified } = req.body;
+    const { name, email, password, host, port, isVerified, provider, accessToken, refreshToken, expiresAt, tenantId, scope } = req.body;
     
     // Check if sender with this email already exists for this user
     const existingSender = await prisma.sender.findFirst({
@@ -27,6 +27,18 @@ export const createSender = async (req: AuthRequest, res: Response) => {
       });
     }
     
+    // Determine provider if not specified
+    let emailProvider = provider;
+    if (!emailProvider) {
+      if (host && port) {
+        emailProvider = 'SMTP';
+      } else if (email.includes('@gmail.com')) {
+        emailProvider = 'GMAIL';
+      } else {
+        emailProvider = 'OUTLOOK';
+      }
+    }
+    
     const sender = await prisma.sender.create({
       data: {
         name,
@@ -35,6 +47,12 @@ export const createSender = async (req: AuthRequest, res: Response) => {
         host: host || null,
         port: port || null,
         isVerified: isVerified || false,
+        provider: emailProvider,
+        accessToken: accessToken || null,
+        refreshToken: refreshToken || null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        tenantId: tenantId || null,
+        scope: scope || null,
         userId: req.user!.id
       }
     });
@@ -65,11 +83,17 @@ export const getSenders = async (req: AuthRequest, res: Response) => {
 export const updateSender = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, isVerified } = req.body;
+    const { name, email, isVerified, provider, host, port, password } = req.body;
+
+    const updateData: any = { name, email, isVerified };
+    if (provider) updateData.provider = provider;
+    if (host !== undefined) updateData.host = host;
+    if (port !== undefined) updateData.port = port;
+    if (password !== undefined) updateData.password = password;
 
     const sender = await prisma.sender.updateMany({
       where: { id, userId: req.user!.id },
-      data: { name, email, isVerified }
+      data: updateData
     });
 
     if (sender.count === 0) {
