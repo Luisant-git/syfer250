@@ -59,7 +59,7 @@ model Sender {
   port      Int?
   isVerified Boolean   @default(false)
   userId    String
-  provider     EmailProvider @default(OUTLOOK)
+  provider     EmailProvider @default(GMAIL)
   accessToken  String?
   refreshToken String?
   expiresAt    DateTime?

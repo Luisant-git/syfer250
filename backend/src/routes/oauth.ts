@@ -173,6 +173,7 @@ router.get("/gmail/callback", async (req: Request, res: Response) => {
               await prisma.sender.update({
                 where: { id: existingSender.id },
                 data: {
+                  provider: "GMAIL",
                   accessToken: tokens.access_token,
                   refreshToken: tokens.refresh_token,
                   expiresAt: expiresAt,
@@ -337,6 +338,7 @@ router.get("/outlook/callback", async (req: Request, res: Response) => {
               await prisma.sender.update({
                 where: { id: existingSender.id },
                 data: {
+                  provider: "OUTLOOK",
                   accessToken: tokens.access_token,
                   refreshToken: tokens.refresh_token || existingSender.refreshToken,
                   expiresAt: expiresAt,
