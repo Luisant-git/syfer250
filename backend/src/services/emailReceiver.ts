@@ -26,10 +26,10 @@ export class EmailReceiver {
       this.imap.once('ready', () => {
         console.log('IMAP connected successfully');
         
-        this.imap.openBox('INBOX', false, (err, box) => {
+        this.imap.openBox('INBOX', false, (err: any, box: any) => {
           if (err) return reject(err);
 
-          this.imap.search(['UNSEEN'], (err, results) => {
+          this.imap.search(['UNSEEN'], (err: any, results: any) => {
             if (err) return reject(err);
             
             console.log(`Found ${results.length} unread emails`);
@@ -50,7 +50,7 @@ export class EmailReceiver {
             const emails: any[] = [];
             let processed = 0;
 
-            fetch.on('message', (msg) => {
+            fetch.on('message', (msg: any) => {
               msg.on('body', (stream: any) => {
                 simpleParser(stream as any, (err: any, parsed: any) => {
                   if (!err) {
