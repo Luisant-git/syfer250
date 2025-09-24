@@ -14,6 +14,7 @@ import blockListRoutes from './routes/blockList';
 import inboxRoutes from './routes/inbox';
 import oauthRoutes from './routes/oauth';
 import testOauthRoutes from './routes/test-oauth';
+import emailRoutes from './routes/emails';
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use('/api/blocklist', blockListRoutes);
 app.use('/api/inbox', inboxRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/test-oauth', testOauthRoutes);
+app.use('/api/emails', emailRoutes);
 
 // Health check
 app.get('/', (req, res) => {

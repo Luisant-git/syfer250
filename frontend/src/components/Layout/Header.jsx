@@ -160,12 +160,7 @@ const Header = ({ toggleSidebar }) => {
         <div
           className="header__user"
           ref={userButtonRef}
-          onClick={isMobile ? () => setIsUserDropdownOpen(!isUserDropdownOpen) : undefined}
-          onMouseEnter={!isMobile ? () => {
-            setClosing(false);
-            setIsUserDropdownOpen(true);
-          } : undefined}
-          onMouseLeave={!isMobile ? handleMouseLeave : undefined}
+          onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
         >
           <User size={20} />
           {!isMobile && <span>{getUserName()}</span>}
@@ -173,8 +168,6 @@ const Header = ({ toggleSidebar }) => {
             <div
               className={`user-dropdown ${closing ? "closing" : ""} ${isMobile ? "mobile" : ""}`}
               ref={dropdownRef}
-              onMouseEnter={!isMobile ? () => setClosing(false) : undefined}
-              onMouseLeave={!isMobile ? handleMouseLeave : undefined}
             >
               <div className="user-dropdown__header">
                 <div className="user-dropdown__avatar">

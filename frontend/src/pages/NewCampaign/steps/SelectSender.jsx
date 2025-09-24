@@ -14,6 +14,8 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showSMTPModal, setShowSMTPModal] = useState(false);
+  const [showIMAPModal, setShowIMAPModal] = useState(false);
+  const [showPOP3Modal, setShowPOP3Modal] = useState(false);
   const [newSender, setNewSender] = useState({ name: '', email: '' });
 
   const [newAccountProvider, setNewAccountProvider] = useState('Gmail');
@@ -24,6 +26,22 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
     username: '',
     password: '',
     secure: false
+  });
+  const [imapConfig, setIMAPConfig] = useState({
+    email: '',
+    host: '',
+    port: 993,
+    username: '',
+    password: '',
+    useSSL: true
+  });
+  const [pop3Config, setPOP3Config] = useState({
+    email: '',
+    host: '',
+    port: 995,
+    username: '',
+    password: '',
+    useSSL: true
   });
   console.log("-----------VIEW-SMTP-----------",smtpConfig);
   
@@ -366,7 +384,10 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                 <ProviderBadge provider={sender.provider || 'OUTLOOK'} />
                 {sender.host && (
                   <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                    {sender.host}:{sender.port}
+                    {sender.provider === 'IMAP' ? 
+                      `Send: ${sender.host}:${sender.port} | Receive: IMAP:993` :
+                      `${sender.host}:${sender.port}`
+                    }
                   </span>
                 )}
               </div>
@@ -506,6 +527,36 @@ const SelectSender = ({ data, onUpdate, campaignData }) => {
                   <p style={{ margin: 0, color: '#666' }}>Connect using SMTP configuration</p>
                 </div>
                 <Button variant="outline" onClick={() => { setShowConnectModal(false); setShowSMTPModal(true); }}>Configure</Button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <div style={{ marginRight: '1rem' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <path d="M22 6l-10 7L2 6"/>
+                    <path d="M7 10l5 3 5-3" strokeDasharray="2,2"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>IMAP Server</h4>
+                  <p style={{ margin: 0, color: '#666' }}>Connect using IMAP configuration</p>
+                </div>
+                <Button variant="outline" onClick={() => { setShowConnectModal(false); setShowIMAPModal(true); }}>Configure</Button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', border: '1px solid #ddd', borderRadius: '8px' }}>
+                <div style={{ marginRight: '1rem' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <path d="M22 6l-10 7L2 6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>POP3 Server</h4>
+                  <p style={{ margin: 0, color: '#666' }}>Connect using POP3 configuration</p>
+                </div>
+                <Button variant="outline" onClick={() => { setShowConnectModal(false); setShowPOP3Modal(true); }}>Configure</Button>
               </div>
             </div>
           </div>
@@ -725,6 +776,300 @@ disabled={loading || !smtpConfig.email || !smtpConfig.host || !smtpConfig.userna
                 style={{ backgroundColor: '#ef4444', borderColor: '#ef4444' }}
               >
                 {loading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IMAP Configuration Modal */}
+      {showIMAPModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0 }}>Configure IMAP Server</h3>
+              <Button variant="ghost" onClick={() => setShowIMAPModal(false)} style={{ fontSize: '24px', padding: '8px 16px' }}>×</Button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email Address *</label>
+                <input
+                  type="email"
+                  value={imapConfig.email}
+                  onChange={(e) => setIMAPConfig({...imapConfig, email: e.target.value})}
+                  placeholder="your@email.com"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>IMAP Host *</label>
+                  <input
+                    type="text"
+                    value={imapConfig.host}
+                    onChange={(e) => setIMAPConfig({...imapConfig, host: e.target.value})}
+                    placeholder="imap.secureserver.net"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Port *</label>
+                  <input
+                    type="number"
+                    value={imapConfig.port}
+                    onChange={(e) => setIMAPConfig({...imapConfig, port: parseInt(e.target.value)})}
+                    placeholder="993"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Username *</label>
+                <input
+                  type="text"
+                  value={imapConfig.username}
+                  onChange={(e) => setIMAPConfig({...imapConfig, username: e.target.value})}
+                  placeholder="Usually your email address"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Password *</label>
+                <input
+                  type="password"
+                  value={imapConfig.password}
+                  onChange={(e) => setIMAPConfig({...imapConfig, password: e.target.value})}
+                  placeholder="Your email password"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={imapConfig.useSSL}
+                    onChange={(e) => setIMAPConfig({...imapConfig, useSSL: e.target.checked})}
+                  />
+                  Use SSL/TLS (recommended)
+                </label>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <Button variant="outline" onClick={() => setShowIMAPModal(false)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  if (!imapConfig.email || !imapConfig.host || !imapConfig.username || !imapConfig.password) {
+                    showError('All IMAP fields are required');
+                    return;
+                  }
+                  
+                  setLoading(true);
+                  try {
+                    const senderData = {
+                      name: imapConfig.email.split('@')[0],
+                      email: imapConfig.email,
+                      password: imapConfig.password,
+                      imapHost: imapConfig.host,
+                      imapPort: imapConfig.port,
+                      host: imapConfig.host.includes('secureserver') ? 'smtpout.secureserver.net' : imapConfig.host.replace('imap', 'smtp'),
+                      port: imapConfig.host.includes('secureserver') ? 465 : 587,
+                      provider: 'IMAP',
+                      useSSL: imapConfig.useSSL,
+                      isVerified: true
+                    };
+                    
+                    const response = await apiService.createSender(senderData);
+                    
+                    if (response.success) {
+                      showSuccess('IMAP account connected successfully');
+                      fetchSenders();
+                      setIMAPConfig({ email: '', host: '', port: 993, username: '', password: '', useSSL: true });
+                      setShowIMAPModal(false);
+                    } else {
+                      showError(response.error || 'Failed to connect IMAP account');
+                    }
+                  } catch (error) {
+                    showError(error.message || 'Failed to connect IMAP account');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading || !imapConfig.email || !imapConfig.host || !imapConfig.username || !imapConfig.password}
+              >
+                Connect IMAP
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POP3 Configuration Modal */}
+      {showPOP3Modal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0 }}>Configure POP3 Server</h3>
+              <Button variant="ghost" onClick={() => setShowPOP3Modal(false)} style={{ fontSize: '24px', padding: '8px 16px' }}>×</Button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Email Address *</label>
+                <input
+                  type="email"
+                  value={pop3Config.email}
+                  onChange={(e) => setPOP3Config({...pop3Config, email: e.target.value})}
+                  placeholder="your@email.com"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>POP3 Host *</label>
+                  <input
+                    type="text"
+                    value={pop3Config.host}
+                    onChange={(e) => setPOP3Config({...pop3Config, host: e.target.value})}
+                    placeholder="pop.secureserver.net"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Port *</label>
+                  <input
+                    type="number"
+                    value={pop3Config.port}
+                    onChange={(e) => setPOP3Config({...pop3Config, port: parseInt(e.target.value)})}
+                    placeholder="995"
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Username *</label>
+                <input
+                  type="text"
+                  value={pop3Config.username}
+                  onChange={(e) => setPOP3Config({...pop3Config, username: e.target.value})}
+                  placeholder="Usually your email address"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Password *</label>
+                <input
+                  type="password"
+                  value={pop3Config.password}
+                  onChange={(e) => setPOP3Config({...pop3Config, password: e.target.value})}
+                  placeholder="Your email password"
+                  style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={pop3Config.useSSL}
+                    onChange={(e) => setPOP3Config({...pop3Config, useSSL: e.target.checked})}
+                  />
+                  Use SSL/TLS (recommended)
+                </label>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <Button variant="outline" onClick={() => setShowPOP3Modal(false)}>Cancel</Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  if (!pop3Config.email || !pop3Config.host || !pop3Config.username || !pop3Config.password) {
+                    showError('All POP3 fields are required');
+                    return;
+                  }
+                  
+                  setLoading(true);
+                  try {
+                    const senderData = {
+                      name: pop3Config.email.split('@')[0],
+                      email: pop3Config.email,
+                      password: pop3Config.password,
+                      popHost: pop3Config.host,
+                      popPort: pop3Config.port,
+                      host: pop3Config.host.includes('secureserver') ? 'smtpout.secureserver.net' : pop3Config.host.replace('pop', 'smtp'),
+                      port: pop3Config.host.includes('secureserver') ? 465 : 587,
+                      provider: 'POP3',
+                      useSSL: pop3Config.useSSL,
+                      isVerified: true
+                    };
+                    
+                    const response = await apiService.createSender(senderData);
+                    
+                    if (response.success) {
+                      showSuccess('POP3 account connected successfully');
+                      fetchSenders();
+                      setPOP3Config({ email: '', host: '', port: 995, username: '', password: '', useSSL: true });
+                      setShowPOP3Modal(false);
+                    } else {
+                      showError(response.error || 'Failed to connect POP3 account');
+                    }
+                  } catch (error) {
+                    showError(error.message || 'Failed to connect POP3 account');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading || !pop3Config.email || !pop3Config.host || !pop3Config.username || !pop3Config.password}
+              >
+                Connect POP3
               </Button>
             </div>
           </div>

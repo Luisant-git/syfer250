@@ -57,6 +57,11 @@ model Sender {
   password  String?
   host      String?
   port      Int?
+  imapHost  String?
+  imapPort  Int?
+  popHost   String?
+  popPort   Int?
+  useSSL    Boolean?   @default(true)
   isVerified Boolean   @default(false)
   userId    String
   provider     EmailProvider @default(GMAIL)
@@ -170,4 +175,6 @@ enum EmailProvider {
   SMTP
   GMAIL
   OUTLOOK
+  IMAP
+  POP3
 }

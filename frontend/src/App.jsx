@@ -15,6 +15,7 @@ import Profile from "./pages/Profile/Profile"
 import Security from "./pages/Security/Security"
 import GlobalBlockList from "./pages/GlobalBlockList/GlobalBlockList"
 import PlansAndBilling from "./pages/PlansAndBilling/PlansAndBilling"
+import ReceivedEmails from "./pages/Emails/ReceivedEmails"
 import OAuthCallback from "./pages/OAuthCallback"
 import "./styles/global.scss"
 
@@ -41,6 +42,7 @@ function App() {
             <Route path="/security" element={<Security />} />
             <Route path="/global-block-list" element={<GlobalBlockList />} />
             <Route path="/plans-billing" element={<PlansAndBilling />} />
+            <Route path="/emails" element={<ReceivedEmails />} />
           </Route>
         </Routes>
       </Router>

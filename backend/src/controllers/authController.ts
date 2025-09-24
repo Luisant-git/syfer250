@@ -24,6 +24,7 @@ export const register = async (req: Request, res: Response) => {
       data: { token, user: { id: user.id, email: user.email, firstName, lastName } }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ success: false, error: 'Registration failed' });
   }
 };

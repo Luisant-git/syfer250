@@ -104,7 +104,7 @@ const ImportSettings = ({ data, onUpdate }) => {
           lastName: lastNameIndex >= 0 ? values[lastNameIndex] || '' : '',
           company: companyIndex >= 0 ? values[companyIndex] || '' : '',
           phone: phoneIndex >= 0 ? values[phoneIndex] || '' : '',
-          isValid: validateEmail(email)
+          isValid: true
         };
       })
       .filter(r => r.email);
@@ -121,6 +121,7 @@ const ImportSettings = ({ data, onUpdate }) => {
     // Show validation summary
     const invalidCount = newRecipients.filter(r => !r.isValid).length;
     const errors = [];
+    if (newRecipients.length > 0) errors.push(`${newRecipients.length} recipients imported`);
     if (duplicates > 0) errors.push(`${duplicates} duplicate emails skipped`);
     if (invalidCount > 0) errors.push(`${invalidCount} invalid email addresses found`);
     setValidationErrors(errors);

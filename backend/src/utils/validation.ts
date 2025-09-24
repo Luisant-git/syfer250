@@ -48,11 +48,16 @@ export const senderSchemas = {
     password: Joi.string().allow('', null).optional(),
     host: Joi.string().allow('', null).optional(),
     port: Joi.number().allow(null).optional(),
+    imapHost: Joi.string().allow('', null).optional(),
+    imapPort: Joi.number().allow(null).optional(),
+    popHost: Joi.string().allow('', null).optional(),
+    popPort: Joi.number().allow(null).optional(),
+    useSSL: Joi.boolean().optional(),
     isVerified: Joi.boolean().optional(),
-    provider: Joi.string().valid('SMTP', 'GMAIL', 'OUTLOOK').optional(),
+    provider: Joi.string().valid('SMTP', 'GMAIL', 'OUTLOOK', 'IMAP', 'POP3').optional(),
     accessToken: Joi.string().allow('', null).optional(),
     refreshToken: Joi.string().allow('', null).optional(),
-    expiresAt: Joi.date().allow(null).optional(),
+    expiresAt: Joi.date().allow('', null).optional(),
     tenantId: Joi.string().allow('', null).optional(),
     scope: Joi.string().allow('', null).optional()
   })

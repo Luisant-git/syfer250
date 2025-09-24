@@ -12,10 +12,11 @@ export const createSender = async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password, host, port, isVerified, provider, accessToken, refreshToken, expiresAt, tenantId, scope } = req.body;
     
-    // Check if sender with this email already exists for this user
+    // Check if sender with this email and provider already exists for this user
     const existingSender = await prisma.sender.findFirst({
       where: {
         email,
+        provider: provider || 'SMTP',
         userId: req.user!.id
       }
     });
@@ -23,7 +24,7 @@ export const createSender = async (req: AuthRequest, res: Response) => {
     if (existingSender) {
       return res.status(409).json({ 
         success: false, 
-        error: 'A sender with this email already exists' 
+        error: `A ${provider || 'SMTP'} sender with this email already exists` 
       });
     }
     
