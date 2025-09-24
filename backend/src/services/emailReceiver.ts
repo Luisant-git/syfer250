@@ -15,9 +15,9 @@ export class EmailReceiver {
   }) {
     this.imap = new Imap({
       ...config,
-      connTimeout: 10000,
-      authTimeout: 10000,
-      keepalive: false
+      connTimeout: 60000,
+      authTimeout: 30000,
+      keepalive: true
     });
   }
 
@@ -38,11 +38,15 @@ export class EmailReceiver {
               return resolve([]);
             }
 
-            // Limit to first 5 emails to avoid timeout
-            const limitedResults = results.slice(0, 5);
-            console.log(`Processing ${limitedResults.length} emails`);
+            // Process emails in batches to avoid connection reset
+            const batchSize = 19;
+            const batch = results.slice(0, batchSize);
+            console.log(`Processing ${batch.length} of ${results.length} emails`);
             
-            const fetch = this.imap.fetch(limitedResults, { bodies: '' });
+            const fetch = this.imap.fetch(batch, { 
+              bodies: '',
+              struct: false
+            });
             const emails: any[] = [];
             let processed = 0;
 
@@ -60,7 +64,8 @@ export class EmailReceiver {
                     });
                   }
                   processed++;
-                  if (processed === limitedResults.length) {
+                  console.log(`Processed ${processed}/${results.length} emails`);
+                  if (processed === batch.length) {
                     this.imap.end();
                     resolve(emails);
                   }
@@ -72,8 +77,15 @@ export class EmailReceiver {
               setTimeout(() => {
                 this.imap.end();
                 resolve(emails);
-              }, 1000);
+              }, 2000);
             });
+
+            // Timeout after 5 minutes for all emails
+            setTimeout(() => {
+              console.log(`Timeout: returning ${emails.length} emails`);
+              this.imap.end();
+              resolve(emails);
+            }, 300000);
           });
         });
       });
@@ -114,7 +126,7 @@ const fetchPOP3Emails = async (config: any, senderId: string) => {
       if (status && msgcount > 0) {
         const emails: any[] = [];
         let processed = 0;
-        const limit = Math.min(msgcount, 5);
+        const limit = msgcount;
         
         for (let i = 1; i <= limit; i++) {
           client.retr(i);
