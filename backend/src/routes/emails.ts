@@ -4,6 +4,17 @@ import { prisma } from '../config/database';
 
 const router = Router();
 
+router.get('/senders', async (req, res) => {
+  try {
+    const senders = await prisma.sender.findMany({
+      select: { id: true, email: true, provider: true }
+    });
+    res.json({ senders });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get senders' });
+  }
+});
+
 router.get('/check/:senderId', async (req, res) => {
   try {
     const { senderId } = req.params;
