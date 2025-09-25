@@ -315,26 +315,68 @@ const CampaignView = () => {
                   <span style={{ color: '#666' }}>Status:</span>
                   <span>{getStatusBadge(campaign.status)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Created:</span>
-                  <span>{formatDate(campaign.createdAt)}</span>
+                {campaign.priority && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#666' }}>Priority:</span>
+                    <span style={{ 
+                      color: campaign.priority === 'URGENT' ? '#dc3545' : 
+                             campaign.priority === 'HIGH' ? '#fd7e14' : 
+                             campaign.priority === 'MEDIUM' ? '#ffc107' : '#28a745',
+                      fontWeight: '500'
+                    }}>
+                      {campaign.priority}
+                    </span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <span style={{ color: '#666', minWidth: '70px' }}>Created:</span>
+                  <span style={{ textAlign: 'right', flex: 1 }}>{formatDate(campaign.createdAt)}</span>
                 </div>
                 {campaign.sentAt && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Sent:</span>
-                    <span>{formatDate(campaign.sentAt)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ color: '#666', minWidth: '70px' }}>Sent:</span>
+                    <span style={{ textAlign: 'right', flex: 1 }}>{formatDate(campaign.sentAt)}</span>
                   </div>
                 )}
                 {campaign.scheduledAt && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Scheduled:</span>
-                    <span>{formatDate(campaign.scheduledAt)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ color: '#666', minWidth: '70px' }}>Scheduled:</span>
+                    <span style={{ textAlign: 'right', flex: 1 }}>{formatDate(campaign.scheduledAt)}</span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#666' }}>Recipients:</span>
                   <span>{campaign.recipients?.length || 0}</span>
                 </div>
+                {/* {campaign.description && (
+                  <div style={{ borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
+                    <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 'bold' }}>Description:</span>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: '#374151' }}>
+                      {campaign.description}
+                    </p>
+                  </div>
+                )} */}
+                {campaign.tags && campaign.tags.length > 0 && (
+                  <div style={{ borderTop: campaign.description ? 'none' : '1px solid #eee', paddingTop: campaign.description ? '0.5rem' : '0.75rem' }}>
+                    <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 'bold' }}>Tags:</span>
+                    <div style={{ margin: '0.25rem 0 0 0', display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                      {campaign.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          style={{
+                            backgroundColor: '#e3f2fd',
+                            color: '#1976d2',
+                            padding: '0.125rem 0.375rem',
+                            borderRadius: '8px',
+                            fontSize: '0.7rem'
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card.Body>
           </Card>

@@ -12,7 +12,7 @@ interface AuthRequest extends Request {
 
 export const createCampaign = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, subject, content, senderId, scheduledAt, recipients, scheduleType, timezone } = req.body;
+    const { name, description, tags, subject, content, priority, senderId, scheduledAt, recipients, scheduleType, timezone } = req.body;
 
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       return res.status(400).json({
@@ -51,9 +51,12 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
     const campaign = await prisma.campaign.create({
       data: {
         name,
+        description: description || null,
+        tags: tags || [],
         subject,
         content,
         status,
+        priority: priority ? priority.toUpperCase() : 'MEDIUM',
         senderId: senderId && senderId.trim() !== "" ? senderId : null,
         scheduledAt: finalScheduledAt,
         timezone: timezone || 'UTC',

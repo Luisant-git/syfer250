@@ -26,7 +26,7 @@ const NewCampaign = () => {
     sequences: [{ subject: "", content: "" }],
     sender: "",
     schedule: { scheduleType: "now", scheduledAt: null },
-    settings: { name: "", description: "" },
+    settings: { name: "", description: "", tags: [], priority: "medium" },
   })
 
   const steps = [
@@ -97,8 +97,11 @@ const NewCampaign = () => {
       
       const campaignPayload = {
         name: settings.name.trim(),
+        description: settings.description || null,
+        tags: settings.tags || [],
         subject: sequences[0].subject.trim(),
         content: sequences[0].content.trim(),
+        priority: settings.priority || 'medium',
         senderId: sender && sender.trim() !== "" ? sender.trim() : null,
         scheduledAt: schedule.scheduledAt || null,
         scheduleType: schedule.scheduleType || 'draft',

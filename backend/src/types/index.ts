@@ -16,8 +16,11 @@ export interface AuthRequest extends Request {
 
 export interface CreateCampaignData {
   name: string;
+  description?: string;
+  tags?: string[];
   subject: string;
   content: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   senderId?: string;
   scheduledAt?: Date;
   recipients: Array<{
@@ -29,8 +32,11 @@ export interface CreateCampaignData {
 
 export interface UpdateCampaignData {
   name?: string;
+  description?: string;
+  tags?: string[];
   subject?: string;
   content?: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   senderId?: string;
   scheduledAt?: Date;
   status?: string;
