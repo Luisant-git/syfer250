@@ -35,9 +35,12 @@ model User {
 model Campaign {
   id          String        @id @default(cuid())
   name        String
+  description String?
+  tags        String[]      @default([])
   subject     String
   content     String
   status      CampaignStatus @default(SENT)
+  priority    CampaignPriority @default(MEDIUM)
   scheduledAt DateTime?
   timezone    String?       @default("UTC")
   sentAt      DateTime?
@@ -178,4 +181,11 @@ enum EmailProvider {
   OUTLOOK
   IMAP
   POP3
+}
+
+enum CampaignPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

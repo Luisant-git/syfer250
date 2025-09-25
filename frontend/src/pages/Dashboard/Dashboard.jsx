@@ -274,6 +274,12 @@ const Dashboard = () => {
                             Scheduled: {formatDate(campaign.scheduledAt)}
                           </div>
                         )}
+                        {campaign.priority && (
+                          <div style={{ fontSize: '0.8rem', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem', color: campaign.priority === 'URGENT' ? '#dc3545' : campaign.priority === 'HIGH' ? '#fd7e14' : campaign.priority === 'MEDIUM' ? '#ffc107' : '#28a745' }}>
+                            Priority: {campaign.priority}
+                          </div>
+                        )}
+                        
                       </div>
                     </Table.Cell>
                     <Table.Cell>

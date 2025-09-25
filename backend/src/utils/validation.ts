@@ -17,8 +17,11 @@ export const authSchemas = {
 export const campaignSchemas = {
   create: Joi.object({
     name: Joi.string().required(),
+    description: Joi.string().allow('', null).optional(),
+    tags: Joi.array().items(Joi.string()).optional(),
     subject: Joi.string().required(),
     content: Joi.string().required(),
+    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
     senderId: Joi.string().allow('', null).optional(),
     scheduledAt: Joi.date().allow(null).optional(),
     scheduleType: Joi.string().valid('now', 'later', 'draft').optional(),
@@ -34,8 +37,11 @@ export const campaignSchemas = {
   
   update: Joi.object({
     name: Joi.string().optional(),
+    description: Joi.string().allow('', null).optional(),
+    tags: Joi.array().items(Joi.string()).optional(),
     subject: Joi.string().optional(),
     content: Joi.string().optional(),
+    priority: Joi.string().valid('low', 'medium', 'high', 'urgent').optional(),
     senderId: Joi.string().allow('', null).optional(),
     scheduledAt: Joi.date().allow(null).optional(),
     status: Joi.string().valid('DRAFT', 'SCHEDULED', 'SENDING', 'SENT', 'PAUSED', 'CANCELLED').optional()
