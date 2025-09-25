@@ -39,6 +39,7 @@ model Campaign {
   content     String
   status      CampaignStatus @default(SENT)
   scheduledAt DateTime?
+  timezone    String?       @default("UTC")
   sentAt      DateTime?
   userId      String
   senderId    String?

@@ -94,6 +94,12 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
   }
 
   const sender = campaign.sender;
+  
+  // If no OAuth tokens, fall back to SMTP
+  if (!sender.accessToken && !sender.refreshToken) {
+    console.log('No OAuth tokens found, falling back to SMTP');
+    return await sendCampaignMails(campaign);
+  }
   console.log('Sender details:', {
     email: sender.email,
     name: sender.name,
@@ -269,6 +275,12 @@ export const sendCampaignMailsOutlook = async (campaign: any) => {
   }
 
   const sender = campaign.sender;
+  
+  // If no OAuth tokens, fall back to SMTP
+  if (!sender.accessToken && !sender.refreshToken) {
+    console.log('No OAuth tokens found, falling back to SMTP');
+    return await sendCampaignMails(campaign);
+  }
   console.log('Sender details:', {
     email: sender.email,
     name: sender.name,

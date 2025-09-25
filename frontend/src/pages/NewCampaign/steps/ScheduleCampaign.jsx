@@ -45,6 +45,8 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
 
   const handleDateTimeChange = (value) => {
     setScheduledAt(value);
+    
+    // Store the datetime as-is, we'll handle timezone conversion on the backend
     onUpdate({ scheduleType, scheduledAt: value, timezone, sendRate, followUpEnabled, followUpDelay });
   };
 
@@ -97,7 +99,7 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
   ];
 
   const minDateTime = new Date();
-  minDateTime.setMinutes(minDateTime.getMinutes() + 5);
+  minDateTime.setMinutes(minDateTime.getMinutes() + 1);
   const minDateTimeString = minDateTime.toISOString().slice(0, 16);
 
   return (
@@ -195,7 +197,24 @@ const ScheduleCampaign = ({ data, onUpdate, campaignData }) => {
                 </div>
               </div>
               <div style={{ color: '#666', fontSize: '0.8rem' }}>
-                Campaign must be scheduled at least 5 minutes in the future
+                Campaign must be scheduled at least 1 minute in the future
+                {scheduledAt && (
+                  <div style={{ marginTop: '0.5rem', color: '#28a745' }}>
+                    <strong>Scheduled for:</strong> {new Date(scheduledAt).toLocaleString('en-US', {
+                      timeZone: timezone,
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      timeZoneName: 'short'
+                    })}
+                    <br />
+                    <small style={{ color: '#666' }}>
+                      UTC: {new Date(scheduledAt).toISOString().replace('T', ' ').slice(0, 19)}
+                    </small>
+                  </div>
+                )}
               </div>
             </div>
           )}

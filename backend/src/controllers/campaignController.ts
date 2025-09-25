@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { sendCampaignMails, sendCampaignMailsGoogle, sendCampaignMailsOutlook } from "../utils/sendCampaignMails";
+import { convertToUTC, isValidFutureDate } from '../utils/timezone';
 
 interface AuthRequest extends Request {
   user?: {
@@ -11,7 +12,7 @@ interface AuthRequest extends Request {
 
 export const createCampaign = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, subject, content, senderId, scheduledAt, recipients, scheduleType } = req.body;
+    const { name, subject, content, senderId, scheduledAt, recipients, scheduleType, timezone } = req.body;
 
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
       return res.status(400).json({
@@ -27,7 +28,24 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
       status = "SENT";
     } else if (scheduleType === "later" && scheduledAt) {
       status = "SCHEDULED";
-      finalScheduledAt = new Date(scheduledAt);
+      
+      // Convert the scheduled time to UTC
+      finalScheduledAt = convertToUTC(scheduledAt, timezone);
+      
+      // Validate that the scheduled time is in the future
+      if (!isValidFutureDate(finalScheduledAt, 1)) {
+        return res.status(400).json({
+          success: false,
+          error: "Campaign must be scheduled at least 1 minute in the future",
+        });
+      }
+      
+      console.log('Scheduling campaign:', {
+        originalTime: scheduledAt,
+        timezone: timezone || 'UTC',
+        convertedUTC: finalScheduledAt.toISOString(),
+        currentUTC: new Date().toISOString()
+      });
     }
 
     const campaign = await prisma.campaign.create({
@@ -38,6 +56,7 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
         status,
         senderId: senderId && senderId.trim() !== "" ? senderId : null,
         scheduledAt: finalScheduledAt,
+        timezone: timezone || 'UTC',
         sentAt: status === "SENT" ? new Date() : null,
         userId: req.user!.id,
         recipients: {
@@ -66,16 +85,18 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // 🚀 Send emails if "now"
-    if (campaign.sender?.provider === "GMAIL") {
-      await sendCampaignMailsGoogle(campaign);
-      console.log('Using Gmail OAuth sending function');
-    } else if (campaign.sender?.provider === "OUTLOOK") {
-      await sendCampaignMailsOutlook(campaign);
-      console.log('Using Outlook OAuth sending function');
-    } else {
-      await sendCampaignMails(campaign);
-      console.log('Using SMTP sending function');
+    // 🚀 Send emails only if "now"
+    if (status === "SENT") {
+      if (campaign.sender?.provider === "GMAIL") {
+        await sendCampaignMailsGoogle(campaign);
+        console.log('Using Gmail OAuth sending function');
+      } else if (campaign.sender?.provider === "OUTLOOK") {
+        await sendCampaignMailsOutlook(campaign);
+        console.log('Using Outlook OAuth sending function');
+      } else {
+        await sendCampaignMails(campaign);
+        console.log('Using SMTP sending function');
+      }
     }
 
     res.status(201).json({ success: true, data: campaign });

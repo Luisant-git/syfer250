@@ -22,6 +22,7 @@ export const campaignSchemas = {
     senderId: Joi.string().allow('', null).optional(),
     scheduledAt: Joi.date().allow(null).optional(),
     scheduleType: Joi.string().valid('now', 'later', 'draft').optional(),
+    timezone: Joi.string().optional(),
     recipients: Joi.array().items(
       Joi.object({
         email: Joi.string().email().required(),

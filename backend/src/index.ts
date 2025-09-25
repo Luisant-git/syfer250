@@ -15,6 +15,8 @@ import inboxRoutes from './routes/inbox';
 import oauthRoutes from './routes/oauth';
 import testOauthRoutes from './routes/test-oauth';
 import emailRoutes from './routes/emails';
+import schedulerRoutes from './routes/scheduler';
+import { schedulerService } from './services/schedulerService';
 
 dotenv.config();
 
@@ -64,6 +66,7 @@ app.use('/api/inbox', inboxRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/test-oauth', testOauthRoutes);
 app.use('/api/emails', emailRoutes);
+app.use('/api/scheduler', schedulerRoutes);
 
 // Health check
 app.get('/', (req, res) => {
@@ -98,4 +101,7 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  
+  // Start the scheduler service
+  schedulerService.start();
 });

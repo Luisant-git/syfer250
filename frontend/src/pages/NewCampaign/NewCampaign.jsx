@@ -80,6 +80,21 @@ const NewCampaign = () => {
         throw new Error("At least one recipient is required")
       }
       
+      // Validate scheduled time if scheduling for later
+      if (schedule.scheduleType === 'later') {
+        if (!schedule.scheduledAt) {
+          throw new Error("Scheduled date and time is required")
+        }
+        
+        const scheduledTime = new Date(schedule.scheduledAt)
+        const now = new Date()
+        const minTime = new Date(now.getTime() + 1 * 60000) // 1 minute from now
+        
+        if (scheduledTime <= minTime) {
+          throw new Error("Campaign must be scheduled at least 1 minute in the future")
+        }
+      }
+      
       const campaignPayload = {
         name: settings.name.trim(),
         subject: sequences[0].subject.trim(),
@@ -87,6 +102,7 @@ const NewCampaign = () => {
         senderId: sender && sender.trim() !== "" ? sender.trim() : null,
         scheduledAt: schedule.scheduledAt || null,
         scheduleType: schedule.scheduleType || 'draft',
+        timezone: schedule.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         recipients: importData.recipients.map(recipient => ({
           email: recipient.email,
           firstName: recipient.firstName || "",
@@ -95,6 +111,15 @@ const NewCampaign = () => {
       }
       
       console.log("Creating campaign with payload:", campaignPayload)
+      
+      // Log scheduling details for debugging
+      if (schedule.scheduleType === 'later') {
+        console.log('Scheduling details:', {
+          originalTime: schedule.scheduledAt,
+          timezone: schedule.timezone,
+          currentTime: new Date().toISOString()
+        })
+      }
       
       const response = await apiService.createCampaign(campaignPayload)
       
