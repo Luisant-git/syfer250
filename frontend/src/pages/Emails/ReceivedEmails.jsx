@@ -12,6 +12,8 @@ const ReceivedEmails = () => {
   const [loading, setLoading] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [showFullPreview, setShowFullPreview] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const emailsPerPage = 10;
 
   useEffect(() => {
     fetchSenders();
@@ -37,11 +39,14 @@ const ReceivedEmails = () => {
     
     setLoading(true);
     try {
-      const response = await fetch(`https://campaign.api.shoppingsto.com/api/emails/check/${selectedSender}`);
+      const response = await fetch(`http://localhost:3000/api/emails/check/${selectedSender}`);
       const data = await response.json();
       
       if (data.success) {
-        setEmails(data.emails || []);
+        console.log('Raw emails from backend:', data.emails?.map(e => ({ from: e.from, date: e.date })));
+        const sortedEmails = (data.emails || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+        setEmails(sortedEmails);
+        setCurrentPage(1);
         showSuccess(`Found ${data.emails?.length || 0} emails`);
       } else {
         showError(data.error || 'Failed to check emails');
@@ -56,6 +61,10 @@ const ReceivedEmails = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
+
+  const totalPages = Math.ceil(emails.length / emailsPerPage);
+  const startIndex = (currentPage - 1) * emailsPerPage;
+  const currentEmails = emails.slice(startIndex, startIndex + emailsPerPage);
 
   return (
     <div style={{ 
@@ -111,7 +120,7 @@ const ReceivedEmails = () => {
         <div>
           <h3 style={{ marginBottom: '1rem' }}>Inbox ({emails.length})</h3>
           <div style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
-            {emails.map((email, index) => (
+            {currentEmails.map((email, index) => (
               <div
                 key={index}
                 onClick={() => {
@@ -120,7 +129,7 @@ const ReceivedEmails = () => {
                 }}
                 style={{
                   padding: window.innerWidth > 768 ? '1rem' : '0.75rem',
-                  borderBottom: index < emails.length - 1 ? '1px solid #eee' : 'none',
+                  borderBottom: index < currentEmails.length - 1 ? '1px solid #eee' : 'none',
                   cursor: 'pointer',
                   backgroundColor: selectedEmail === email ? '#f0f8ff' : 'white'
                 }}
@@ -142,6 +151,25 @@ const ReceivedEmails = () => {
               </div>
             ))}
           </div>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              <Button
+                variant="secondary"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span style={{ padding: '0 1rem' }}>Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="secondary"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

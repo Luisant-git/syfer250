@@ -29,18 +29,18 @@ export class EmailReceiver {
         this.imap.openBox('INBOX', false, (err: any, box: any) => {
           if (err) return reject(err);
 
-          this.imap.search(['UNSEEN'], (err: any, results: any) => {
+          this.imap.search(['ALL'], (err: any, results: any) => {
             if (err) return reject(err);
             
-            console.log(`Found ${results.length} unread emails`);
+            console.log(`Found ${results.length} emails`);
             if (!results.length) {
               this.imap.end();
               return resolve([]);
             }
 
             // Process emails in batches to avoid connection reset
-            const batchSize = 19;
-            const batch = results.slice(0, batchSize);
+            const batchSize = 10;
+            const batch = results.slice(-batchSize).reverse();
             console.log(`Processing ${batch.length} of ${results.length} emails`);
             
             const fetch = this.imap.fetch(batch, { 
