@@ -39,7 +39,7 @@ const ReceivedEmails = () => {
     
     setLoading(true);
     try {
-      const response = await fetch(`https://campaign.shoppingsto.com/api/emails/check/${selectedSender}`);
+      const response = await fetch(`https://campaign.api.shoppingsto.com/api/emails/check/${selectedSender}`);
       const data = await response.json();
       
       if (data.success) {
