@@ -90,19 +90,46 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
 
     // 🚀 Send emails only if "now"
     if (status === "SENT") {
-      if (campaign.sender?.provider === "GMAIL") {
-        await sendCampaignMailsGoogle(campaign);
+      // Fetch campaign with sender relation for sending
+      const campaignWithSender = await prisma.campaign.findUnique({
+        where: { id: campaign.id },
+        include: { recipients: true, sender: true }
+      });
+      
+      if (campaignWithSender?.sender?.provider === "GMAIL") {
+        await sendCampaignMailsGoogle(campaignWithSender);
         console.log('Using Gmail OAuth sending function');
-      } else if (campaign.sender?.provider === "OUTLOOK") {
-        await sendCampaignMailsOutlook(campaign);
+      } else if (campaignWithSender?.sender?.provider === "OUTLOOK") {
+        await sendCampaignMailsOutlook(campaignWithSender);
         console.log('Using Outlook OAuth sending function');
       } else {
-        await sendCampaignMails(campaign);
+        await sendCampaignMails(campaignWithSender || campaign);
         console.log('Using SMTP sending function');
+      }
+      
+      // Update campaign status based on recipient statuses
+      const updatedRecipients = await prisma.recipient.findMany({
+        where: { campaignId: campaign.id }
+      });
+      
+      const sentCount = updatedRecipients.filter(r => r.status === 'SENT').length;
+      const blockedCount = updatedRecipients.filter(r => r.status === 'BLOCKED').length;
+      
+      if (sentCount === 0 && blockedCount > 0) {
+        await prisma.campaign.update({
+          where: { id: campaign.id },
+          data: { status: 'BLOCKED' }
+        });
       }
     }
 
-    res.status(201).json({ success: true, data: campaign });
+    // Fetch final campaign data
+    const finalCampaign = await prisma.campaign.findUnique({
+      where: { id: campaign.id },
+      include: { recipients: true, sender: true, analytics: true }
+    });
+    
+    res.status(201).json({ success: true, data: finalCampaign });
   } catch (error) {
     console.error("Campaign creation error:", error);
     res.status(500).json({ success: false, error: "Failed to create campaign" });

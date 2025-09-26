@@ -2,6 +2,14 @@ import nodemailer from "nodemailer";
 import axios from 'axios';
 import { prisma } from '../config/database';
 
+// Function to check if email is in Global Block List
+const isEmailBlocked = async (email: string): Promise<boolean> => {
+  const blockedEmail = await prisma.blockList.findUnique({
+    where: { email: email.toLowerCase().trim() }
+  });
+  return !!blockedEmail;
+};
+
 // Function to replace template variables with recipient data
 const replaceTemplateVariables = (template: string, recipient: any): string => {
   let result = template;
@@ -43,6 +51,23 @@ export const sendCampaignMails = async (campaign: any) => {
 
   for (const recipient of campaign.recipients) {
     try {
+      // Check if email is in Global Block List
+      console.log(`🔍 Checking block list for: ${recipient.email}`);
+      const isBlocked = await isEmailBlocked(recipient.email);
+      console.log(`🚫 Block list result for ${recipient.email}: ${isBlocked}`);
+      
+      if (isBlocked) {
+        console.log(`❌ Email ${recipient.email} is in Global Block List, skipping...`);
+        await prisma.recipient.update({
+          where: { id: recipient.id },
+          data: { status: "BLOCKED" },
+        });
+        console.log(`✅ Updated ${recipient.email} status to BLOCKED`);
+        continue;
+      }
+      
+      console.log(`✅ Email ${recipient.email} is NOT blocked, proceeding to send...`);
+
       // Replace template variables with recipient data
       const personalizedSubject = replaceTemplateVariables(campaign.subject, recipient);
       const personalizedContent = replaceTemplateVariables(campaign.content, recipient);
@@ -175,6 +200,16 @@ export const sendCampaignMailsGoogle = async (campaign: any) => {
     console.log(`Attempting to send email to: ${recipient.email}`);
     
     try {
+      // Check if email is in Global Block List
+      if (await isEmailBlocked(recipient.email)) {
+        console.log(`Email ${recipient.email} is in Global Block List, skipping...`);
+        await prisma.recipient.update({
+          where: { id: recipient.id },
+          data: { status: "BLOCKED" },
+        });
+        continue;
+      }
+
       // Replace template variables with recipient data
       const personalizedSubject = replaceTemplateVariables(campaign.subject, recipient);
       const personalizedContent = replaceTemplateVariables(campaign.content, recipient);
@@ -333,6 +368,16 @@ export const sendCampaignMailsOutlook = async (campaign: any) => {
     console.log(`Attempting to send email to: ${recipient.email}`);
     
     try {
+      // Check if email is in Global Block List
+      if (await isEmailBlocked(recipient.email)) {
+        console.log(`Email ${recipient.email} is in Global Block List, skipping...`);
+        await prisma.recipient.update({
+          where: { id: recipient.id },
+          data: { status: "BLOCKED" },
+        });
+        continue;
+      }
+
       const personalizedSubject = replaceTemplateVariables(campaign.subject, recipient);
       const personalizedContent = replaceTemplateVariables(campaign.content, recipient);
 

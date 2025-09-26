@@ -99,6 +99,7 @@ const Dashboard = () => {
       SCHEDULED: "badge badge--primary",
       PAUSED: "badge badge--secondary",
       CANCELLED: "badge badge--danger",
+      BLOCKED: "badge badge--danger",
     }
     return statusClasses[status] || "badge badge--secondary"
   }

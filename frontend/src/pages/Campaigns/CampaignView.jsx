@@ -60,7 +60,8 @@ const CampaignView = () => {
       DRAFT: { color: '#ffc107', bg: '#fff3cd', text: 'Draft' },
       SCHEDULED: { color: '#667eea', bg: '#e3f2fd', text: 'Scheduled' },
       PAUSED: { color: '#6c757d', bg: '#f8f9fa', text: 'Paused' },
-      CANCELLED: { color: '#dc3545', bg: '#f8d7da', text: 'Cancelled' }
+      CANCELLED: { color: '#dc3545', bg: '#f8d7da', text: 'Cancelled' },
+      BLOCKED: { color: '#dc3545', bg: '#f8d7da', text: 'Blocked' }
     };
     
     const config = statusConfig[status] || statusConfig.DRAFT;
@@ -223,8 +224,10 @@ const CampaignView = () => {
                         padding: '0.25rem 0.5rem',
                         borderRadius: '12px',
                         fontSize: '0.8rem',
-                        backgroundColor: recipient.status === 'SENT' ? '#d4edda' : '#fff3cd',
-                        color: recipient.status === 'SENT' ? '#28a745' : '#856404'
+                        backgroundColor: recipient.status === 'SENT' ? '#d4edda' : 
+                                       recipient.status === 'BLOCKED' ? '#f8d7da' : '#fff3cd',
+                        color: recipient.status === 'SENT' ? '#28a745' : 
+                               recipient.status === 'BLOCKED' ? '#dc3545' : '#856404'
                       }}>
                         {recipient.status}
                       </span>
