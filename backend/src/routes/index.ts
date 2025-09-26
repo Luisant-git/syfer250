@@ -4,6 +4,7 @@ import campaignRoutes from './campaigns';
 import senderRoutes from './senders';
 import analyticsRoutes from './analytics';
 import testOauthRoutes from './test-oauth';
+import passwordResetRoutes from './password-reset';
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/campaigns', campaignRoutes);
 router.use('/senders', senderRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/test-oauth', testOauthRoutes);
+router.use('/password', passwordResetRoutes);
 
 export default router;

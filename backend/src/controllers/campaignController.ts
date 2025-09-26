@@ -88,7 +88,7 @@ export const createCampaign = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // 🚀 Send emails only if "now"
+    // 🚀 Send emails only if status is SENT (not DRAFT or CANCELLED)
     if (status === "SENT") {
       if (campaign.sender?.provider === "GMAIL") {
         await sendCampaignMailsGoogle(campaign);
@@ -241,6 +241,17 @@ export const updateCampaign = async (req: AuthRequest, res: Response) => {
       where: { id },
       include: { recipients: true, sender: true, analytics: true }
     });
+
+    // Send emails if status changed to SENT (not for DRAFT or CANCELLED)
+    if (updateData.status === 'SENT' && updatedCampaign) {
+      if (updatedCampaign.sender?.provider === "GMAIL") {
+        await sendCampaignMailsGoogle(updatedCampaign);
+      } else if (updatedCampaign.sender?.provider === "OUTLOOK") {
+        await sendCampaignMailsOutlook(updatedCampaign);
+      } else {
+        await sendCampaignMails(updatedCampaign);
+      }
+    }
 
     res.json({ success: true, data: updatedCampaign });
   } catch (error) {

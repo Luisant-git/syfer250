@@ -182,6 +182,11 @@
     background-color: rgba($text-secondary, 0.1);
     color: $text-secondary;
   }
+
+  &--danger {
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+  }
 }
 
 .campaign-name {

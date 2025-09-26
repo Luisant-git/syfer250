@@ -4,6 +4,8 @@ import Layout from "./components/Layout/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import LoginPage from "./pages/Login/Login"
 import SignupPage from "./pages/Login/Signup"
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword/ResetPassword"
 import Dashboard from "./pages/Dashboard/Dashboard"
 import NewCampaign from "./pages/NewCampaign/NewCampaign"
 import CampaignView from "./pages/Campaigns/CampaignView"
@@ -26,6 +28,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
           
           <Route path="/" element={<Navigate to="/login" replace />} />

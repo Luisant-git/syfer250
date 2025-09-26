@@ -162,6 +162,21 @@ class ApiService {
     });
   }
 
+  // Password reset methods
+  async forgotPassword(email) {
+    return this.request('/password/forgot-password', {
+      method: 'POST',
+      body: { email },
+    });
+  }
+
+  async resetPassword(token, password) {
+    return this.request('/password/reset-password', {
+      method: 'POST',
+      body: { token, password },
+    });
+  }
+
   // Block List methods
   async getBlockList(search = '', source = 'all') {
     const params = new URLSearchParams();

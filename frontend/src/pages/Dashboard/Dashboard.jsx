@@ -89,8 +89,6 @@ const Dashboard = () => {
     },
   ] : []
 
-
-
   const getStatusBadge = (status) => {
     const statusClasses = {
       SENT: "badge badge--success",
