@@ -35,7 +35,7 @@ router.post('/forgot-password', async (req, res) => {
       }
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://campaign.shoppingsto.com'}/reset-password?token=${resetToken}`;
     
     await transporter.sendMail({
       from: process.env.SMTP_USER,
