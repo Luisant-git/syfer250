@@ -1,6 +1,6 @@
 // LoginPage.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { BsFillChatSquareDotsFill } from "react-icons/bs";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -113,9 +113,9 @@ const LoginPage = () => {
               </span>
             </div>
 
-             <a href="#" className="forgot-password-link">
+             <Link to="/forgot-password" className="forgot-password-link">
               Forgot Password?
-            </a>
+            </Link>
 
             <button type="submit" className="login-button" disabled={loading}>
               {loading ? "Signing in..." : "Login"}

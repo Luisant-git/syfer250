@@ -16,6 +16,7 @@ import oauthRoutes from './routes/oauth';
 import testOauthRoutes from './routes/test-oauth';
 import emailRoutes from './routes/emails';
 import schedulerRoutes from './routes/scheduler';
+import passwordResetRoutes from './routes/password-reset';
 import { schedulerService } from './services/schedulerService';
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.use('/api/oauth', oauthRoutes);
 app.use('/api/test-oauth', testOauthRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/scheduler', schedulerRoutes);
+app.use('/api/password', passwordResetRoutes);
 
 // Health check
 app.get('/', (req, res) => {
